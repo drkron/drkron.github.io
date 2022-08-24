@@ -44,7 +44,12 @@ function errorMsg(msg, error) {
 
 async function init(e) {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    var current_constraints = constraints;
+    if (document.querySelector("#audio").checked) {
+      console.log('With Audio');
+      current_constraints.audio = true;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia(current_constraints);
     handleSuccess(stream);
     e.target.disabled = true;
   } catch (e) {
