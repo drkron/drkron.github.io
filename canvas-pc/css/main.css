@@ -9,8 +9,8 @@
 canvas {
   background-color: #ccc;
   --width: calc(45%);
-  width: 240;
-  height: 180;
+  width: 240px;
+  height: 180px;
   margin: 1em;
   vertical-align: top;
 }
