@@ -60,14 +60,14 @@ async function start() {
   console.log('Requesting local stream');
   startButton.disabled = true;
 
-  const options = {audio: false, video: {frameRate: {min:0, max:30}}};
+  const options = {audio: false, video: {frameRate: 30}};
   navigator.mediaDevices.getDisplayMedia(options)
       .then(handleSuccess, handleError);
 }
 
 function handleSuccess(stream) {
   startButton.disabled = true;
-
+  stream.getVideoTracks()[0].applyConstraints({frameRate:{min:0, max:30}});
   localVideo.srcObject = stream;
   localStream = stream;
   callButton.disabled = false;
