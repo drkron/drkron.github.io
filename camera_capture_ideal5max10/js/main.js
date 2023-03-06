@@ -60,7 +60,7 @@ async function start() {
   console.log('Requesting local stream');
   startButton.disabled = true;
 
-  const options = {audio: false, video: {frameRate: 30}};
+  const options = {audio: false, video: {frameRate: 20}};
   navigator.mediaDevices.getUserMedia(options)
       .then(handleSuccess, handleError);
 }
