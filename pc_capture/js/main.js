@@ -94,6 +94,8 @@ function handleSuccess(stream) {
     errorMsg('The user has ended sharing the screen');
     startButton.disabled = false;
   });
+
+  videoTrack = stream.getVideoTracks()[0];
 }
 
 function handleError(error) {
