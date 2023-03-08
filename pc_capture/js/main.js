@@ -22,6 +22,8 @@ applyButton.addEventListener('click', apply);
 
 const minFramerateInput = document.querySelector('div#minFramerate input');
 const maxFramerateInput = document.querySelector('div#maxFramerate input');
+minFramerateInput.onchange = maxFramerateInput.onchange = displayRangeValue;
+
 
 let startTime;
 const localVideo = document.getElementById('localVideo');
@@ -45,6 +47,12 @@ remoteVideo.addEventListener('resize', () => {
     startTime = null;
   }
 });
+
+function displayRangeValue(e) {
+  const span = e.target.parentElement.querySelector('span');
+  span.textContent = e.target.value;
+}
+
 
 let localStream;
 let pc1;
