@@ -117,8 +117,11 @@
       }
 
       function changeFrameRate(fps) {
-        track.applyConstraints({frameRate:{exact:fps}});
+        video.pause();
+        await track.applyConstraints({frameRate:{exact:fps}});
+        video.play();
       }
+
 
       function startRecording() {
         // VP9-support assumed. This is not the focus of this demo. :-)
