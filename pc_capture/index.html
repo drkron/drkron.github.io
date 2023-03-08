@@ -46,7 +46,26 @@
         <button id="startButton">Start</button>
         <button id="callButton">Call</button>
         <button id="hangupButton">Hang Up</button>
+        <buttin id="applyButton">Apply Constraints</button>
     </div>
+
+
+    <section id="constraints">
+        <div id="getDisplayMedia">
+            <div class="input">
+                <h2>Constraints</h2>
+                <div id="minFramerate">
+                    <label>Min frameRate <span>0</span>fps:</label>
+                    <input type="range" min="0" max="60" value="0">
+                </div>
+                <div id="maxFramerate">
+                    <label>Max frameRate <span>30</span>fps:</label>
+                    <input type="range" min="0" max="60" value="30">
+                </div>
+            </div>
+        </div>
+    </section>
+
 
     <p>View the console to see logging. The <code>MediaStream</code> object <code>localStream</code>, and the <code>RTCPeerConnection</code>
         objects <code>pc1</code> and <code>pc2</code> are in global scope, so you can inspect them in the console as

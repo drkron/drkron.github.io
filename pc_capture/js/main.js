@@ -11,11 +11,17 @@
 const startButton = document.getElementById('startButton');
 const callButton = document.getElementById('callButton');
 const hangupButton = document.getElementById('hangupButton');
+const applyButton = document.getElementById('applyButton');
+
 callButton.disabled = true;
 hangupButton.disabled = true;
 startButton.addEventListener('click', start);
 callButton.addEventListener('click', call);
 hangupButton.addEventListener('click', hangup);
+applyButton.addEventListener('click', apply);
+
+const minFramerateInput = document.querySelector('div#minFramerate input');
+const maxFramerateInput = document.querySelector('div#maxFramerate input');
 
 let startTime;
 const localVideo = document.getElementById('localVideo');
@@ -43,6 +49,8 @@ remoteVideo.addEventListener('resize', () => {
 let localStream;
 let pc1;
 let pc2;
+let videoTrack;
+
 const offerOptions = {
   offerToReceiveAudio: 1,
   offerToReceiveVideo: 1
@@ -89,6 +97,12 @@ function errorMsg(msg, error) {
   if (typeof error !== 'undefined') {
     console.error(error);
   }
+}
+
+async function apply() {
+  const constraints = {frameRate: {min: minFramerateInput.value, max: maxFramerateInput.value}};
+  // Apply the complete constraint (including possibly >0 min framerate).
+  await videoTrack.applyConstraints(constraints);
 }
 
 async function call() {
