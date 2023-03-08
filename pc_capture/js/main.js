@@ -76,7 +76,7 @@ async function start() {
   console.log('Requesting local stream');
   startButton.disabled = true;
 
-  const options = {audio: false, video: true};
+  const options = {audio: false, video: true, selfBrowserSurface: true};
   navigator.mediaDevices.getDisplayMedia(options)
       .then(handleSuccess, handleError);
 }
