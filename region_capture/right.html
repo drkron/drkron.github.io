@@ -117,9 +117,7 @@
       }
 
       async function changeFrameRate(fps) {
-        video.pause();
         await track.applyConstraints({frameRate:{exact:fps}});
-        video.play();
       }
 
 
