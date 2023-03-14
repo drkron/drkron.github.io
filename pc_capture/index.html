@@ -54,13 +54,24 @@
         <div id="getDisplayMedia">
             <div class="input">
                 <h2>Constraints</h2>
-                <div id="minFramerate">
-                    <label>Min frameRate <span>0</span>fps:</label>
-                    <input type="range" min="0" max="60" value="0">
+                
+                <div id="resWidthDiv">
+                    <input type="checkbox" id=resolutionCheck>
+                    <label>Width <span>0</span> px</label>
+                    <input id=resWidth type="range" min=240 max=3000 value=1280 step=10>
                 </div>
-                <div id="maxFramerate">
+                <div id=resHeightDiv>
+                    <label>Height <span>0</span> px</label>
+                    <input id=resHeight type="range" min=240 max=3000 value=1280 step=10>
+                </div>
+                <div id="minFramerateDiv">
+                    <input type="checkbox" id=framerateCheck>
+                    <label>Min frameRate <span>0</span>fps:</label>
+                    <input id=minFramerate type="range" min="0" max="60" value="0">
+                </div>
+                <div id="maxFramerateDiv">
                     <label>Max frameRate <span>30</span>fps:</label>
-                    <input type="range" min="0" max="60" value="30">
+                    <input id=maxFramerate type="range" min="0" max="60" value="30">
                 </div>
             </div>
         </div>

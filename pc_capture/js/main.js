@@ -20,9 +20,13 @@ callButton.addEventListener('click', call);
 hangupButton.addEventListener('click', hangup);
 applyButton.addEventListener('click', apply);
 
-const minFramerateInput = document.querySelector('div#minFramerate input');
-const maxFramerateInput = document.querySelector('div#maxFramerate input');
-minFramerateInput.onchange = maxFramerateInput.onchange = displayRangeValue;
+const resolutionCheck = document.getElementById('resolutionCheck');
+const resWidth = document.getElementById('resWidth');
+const resHeight = document.getElementById('resHeight');
+const framerateCheck = document.getElementById('framerateCheck');
+const minFramerateInput = document.getElementById('minFramerate');
+const maxFramerateInput = document.getElementById('maxFramerate');
+resWidth.oninput = resHeight.oninput = minFramerateInput.oninput = maxFramerateInput.oninput = displayRangeValue;
 
 
 let startTime;
@@ -110,8 +114,15 @@ function errorMsg(msg, error) {
 }
 
 async function apply() {
-  const constraints = {frameRate: {min: minFramerateInput.value, max: maxFramerateInput.value}};
-  // Apply the complete constraint (including possibly >0 min framerate).
+  var constraints = {};
+  if (framerateCheck.checked) {
+    constraints['frameRate'] = {min: minFramerateInput.value, max: maxFramerateInput.value};
+  }
+  if (resolutionCheck.checked) {
+    constraints['width'] = {exact: resWidth.value};
+    constraints['height'] = {exact: resHeight.value};
+  }
+  console.log(JSON.stringify(constraints, null, 3)); 
   await videoTrack.applyConstraints(constraints);
 }
 
