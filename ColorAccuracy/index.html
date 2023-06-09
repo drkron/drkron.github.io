@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree.
+-->
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta itemprop="name" content="WebRTC code samples">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta id="theme-color" name="theme-color" content="#ffffff">
+    <title>Test color reproduction accuracy</title>
+
+</head>
+
+<body>
+
+<div id="container">
+
+    <h1>
+      <span>Test color reproduction accuracy</span>
+    </h1>
+
+    <canvas id=canvas width=200 height=200></canvas>
+
+    <h2>Remote video</h2>
+    <video width=200 height=200></video>
+    <select name="codec" id="codec">
+        <option value="VP8">VP8</option>
+        <option value="VP9">VP9</option>
+        <option value="H264">H264</option>
+      </select>
+      <button onclick="run()">Run test</button>
+    <canvas id=canvasRemote width=200 height=200></canvas>
+    <div id=log>
+
+    </div>
+    <p>You must reload the page between each test.</p>
+    <p>View the browser console to see logging.</p>
+    <p>Several variables are in global scope, so you can inspect them from the console: <code>canvas</code>,
+        <code>video</code>, <code>localPeerConnection</code>, <code>remotePeerConnection</code> and <code>stream</code>.
+    </p>
+
+</div>
+
+<script src="js/sdputils.js" async></script>
+<script src="js/main.js" async></script>
+</body>
+</html>
