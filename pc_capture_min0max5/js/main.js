@@ -67,7 +67,7 @@ async function start() {
 
 function handleSuccess(stream) {
   startButton.disabled = true;
-  stream.getVideoTracks()[0].applyConstraints({frameRate:{min:0, max:5}});
+  stream.getVideoTracks()[0].applyConstraints({frameRate:{min:5, max:5}});
   localVideo.srcObject = stream;
   localStream = stream;
   callButton.disabled = false;
