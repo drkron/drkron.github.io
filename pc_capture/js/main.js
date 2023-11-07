@@ -62,6 +62,7 @@ let localStream;
 let pc1;
 let pc2;
 let videoTrack;
+let videoSettings;
 
 const offerOptions = {
   offerToReceiveAudio: 1,
@@ -100,6 +101,8 @@ function handleSuccess(stream) {
   });
 
   videoTrack = stream.getVideoTracks()[0];
+  videoSettings = videoTrack.getSettings();
+  console.log(videoSettings.displaySurface);
 }
 
 function handleError(error) {
