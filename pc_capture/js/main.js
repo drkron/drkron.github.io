@@ -63,11 +63,19 @@ let pc1;
 let pc2;
 let videoTrack;
 let videoSettings;
+let transceiver;
 
 const offerOptions = {
   offerToReceiveAudio: 1,
   offerToReceiveVideo: 1
 };
+
+function videoFullscreen(e) {
+  console.log(e);
+  const videoPlayer = e.closest("div.VideoPlayer");
+  const videoElement = videoPlayer.querySelector("video");
+  videoElement.requestFullscreen();
+}
 
 function getName(pc) {
   return (pc === pc1) ? 'pc1' : 'pc2';
@@ -154,7 +162,18 @@ async function call() {
   pc2.addEventListener('iceconnectionstatechange', e => onIceStateChange(pc2, e));
   pc2.addEventListener('track', gotRemoteStream);
 
-  localStream.getTracks().forEach(track => pc1.addTrack(track, localStream));
+  const maxBitrate = document.getElementById('maxBitrate').valueAsNumber;
+  let encodings = [{maxBitrate: maxBitrate}]
+
+  transceiver = pc1.addTransceiver(videoTracks[0], {
+              streams: [localStream],
+              sendEncodings: encodings,
+          });
+
+  // Move the desired codecs in front
+  const wantedCodecs = RTCRtpSender.getCapabilities("video").codecs.filter((c) => c.mimeType.includes(codec.value));
+  const otherCodecs = RTCRtpSender.getCapabilities("video").codecs.filter((c) => !c.mimeType.includes(codec.value));
+  transceiver.setCodecPreferences(wantedCodecs.concat(otherCodecs));
   console.log('Added local stream to pc1');
 
   try {
@@ -271,3 +290,13 @@ function hangup() {
   hangupButton.disabled = true;
   callButton.disabled = false;
 }
+
+function updateMaxBitrate() {
+  let params = transceiver.sender.getParameters();
+  const maxBitrate = document.getElementById('maxBitrate').valueAsNumber;
+  for (let i = 0; i < params.encodings.length; ++i) {
+    params.encodings[i].maxBitrate = maxBitrate;
+  }
+  transceiver.sender.setParameters(params);  
+}
+

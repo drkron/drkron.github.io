@@ -38,16 +38,46 @@
     <p>This sample shows how to setup a connection between two peers using
         <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection">RTCPeerConnection</a>.
     </p>
-
+    <table>
+    <tr>
+    <td>
+    <div class="VideoPlayer">
     <video id="localVideo" playsinline autoplay muted></video>
+    <div>
+    <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
+    </div
+    </div>
+    </td><td>
+    <div class="VideoPlayer">
     <video id="remoteVideo" playsinline autoplay></video>
-
+    <div>    
+    <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
+    </div>
+    </div>
+    </td></tr>
+    </table>    
     <div class="box">
         <button id="startButton">Start</button>
         <button id="callButton">Call</button>
         <button id="hangupButton">Hang Up</button>
         <button id="applyButton">Apply Constraints</button>
     </div>
+
+    <section id="transceiver">
+      <h2>Transceiver</h2>
+      <select id="codec">
+      <option value="VP8">VP8</option>
+      <option value="VP9">VP9</option>
+      <option value="AV1">AV1</option>
+      <option value="H264">H264</option>
+      </select> 
+
+      <label>
+      maxBitrate (bps):
+      <input type="number" id="maxBitrate" value="3000000"/>
+      </label>
+      <button onclick="javascript:updateMaxBitrate()">Update</button>
+    </section>
 
 
     <section id="constraints">
