@@ -20,6 +20,7 @@ callButton.addEventListener('click', call);
 hangupButton.addEventListener('click', hangup);
 applyButton.addEventListener('click', apply);
 
+const useSimulcastCheck = document.getElementById('useSimulcast');
 const resolutionCheck = document.getElementById('resolutionCheck');
 const resWidth = document.getElementById('resWidth');
 const resHeight = document.getElementById('resHeight');
@@ -163,7 +164,13 @@ async function call() {
   pc2.addEventListener('track', gotRemoteStream);
 
   const maxBitrate = document.getElementById('maxBitrate').valueAsNumber;
-  let encodings = [{maxBitrate: maxBitrate}]
+  var encodings = [];
+  if (useSimulcastCheck.checked) {
+    encodings = [{rid: "one", maxBitrate: maxBitrate, maxFramerate: maxFramerateInput.value, scalabilityMode: "L1T2", scaleResolutionDownBy: 1.0} ];
+  }
+  else {  
+    encodings = [{maxBitrate: maxBitrate}];
+  }
 
   transceiver = pc1.addTransceiver(videoTracks[0], {
               streams: [localStream],
