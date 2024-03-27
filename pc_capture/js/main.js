@@ -178,8 +178,8 @@ async function call() {
           });
 
   // Move the desired codecs in front
-  const wantedCodecs = RTCRtpSender.getCapabilities("video").codecs.filter((c) => c.mimeType.includes(codec.value));
-  const otherCodecs = RTCRtpSender.getCapabilities("video").codecs.filter((c) => !c.mimeType.includes(codec.value));
+  const wantedCodecs = RTCRtpReceiver.getCapabilities("video").codecs.filter((c) => c.mimeType.includes(codec.value));
+  const otherCodecs = RTCRtpReceiver.getCapabilities("video").codecs.filter((c) => !c.mimeType.includes(codec.value));
   transceiver.setCodecPreferences(wantedCodecs.concat(otherCodecs));
   console.log('Added local stream to pc1');
 
