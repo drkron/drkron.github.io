@@ -1,48 +1,70 @@
-/*
- *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree.
- */
 button {
-  margin: 0 20px 0 0;
-  width: 83px;
+  margin: 0 10px 0 0;
 }
 
-button#hangupButton {
-    margin: 0;
+div.input {
+  display: inline-block;
+  margin: 0 4px 0 0;
+  vertical-align: top;
+  width: 310px;
 }
 
-video {
-  --width: 45%;
-  width: var(--width);
-  height: calc(var(--width) * 0.75);
+div.input > div {
   margin: 0 0 20px 0;
   vertical-align: top;
 }
 
-video#localVideo {
-  margin: 0 20px 20px 0;
+div.output {
+  background-color: #eee;
+  display: inline-block;
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  font-size: 0.8em;
+  padding: 0px 0px 0px 5px;
+  position: relative;
+  top: 10px;
+  vertical-align: top;
+  white-space: pre;
+  max-width: fit-content;
+}
+
+table#constraints {
+  margin: 0px 0px 10px 10px;
 }
 
 div.box {
   margin: 1em;
 }
 
-@media screen and (max-width: 400px) {
+section#video > div {
+  display: inline-block;
+  margin: 0 20px 0 0;
+  vertical-align: top;
+  width: calc(50% - 22px);
+}
+
+section#video > div div {
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  font-size: 0.8em;
+}
+
+section#video {
+  width: calc(100% + 20px);
+}
+
+video {
+  --width: 95%;
+  width: var(--width);
+  height: calc(var(--width) * 0.75);
+  margin: 0 0 10px 0;
+}
+
+@media screen and (max-width: 720px) {
   button {
     width: 83px;
     margin: 0 11px 10px 0;
   }
-
+  
   video {
-    height: 90px;
-    margin: 0 0 10px 0;
-    width: calc(50% - 7px);
+    height: 96px;
   }
-  video#localVideo {
-    margin: 0 10px 20px 0;
-  }
-
 }

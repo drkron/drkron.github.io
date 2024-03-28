@@ -41,18 +41,22 @@
     <table>
     <tr>
     <td>
-    <div class="VideoPlayer">
-    <video id="localVideo" playsinline autoplay muted></video>
-    <div>
-    <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
-    </div
+    <div id=localVideo class="VideoPlayer">
+      <video playsinline autoplay muted></video>
+      <div></div>
+      <div id="localVideoFramerate"></div>
+      <div>
+      <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
+      </div
     </div>
     </td><td>
-    <div class="VideoPlayer">
-    <video id="remoteVideo" playsinline autoplay></video>
-    <div>    
-    <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
-    </div>
+    <div class="VideoPlayer" id=remoteVideo>
+      <video playsinline autoplay></video>
+      <div></div>
+      <div id="remoteVideoFramerate"></div>      
+      <div>    
+        <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
+      </div>
     </div>
     </td></tr>
     </table>    
@@ -109,21 +113,14 @@
         </div>
     </section>
 
-
-    <p>View the console to see logging. The <code>MediaStream</code> object <code>localStream</code>, and the <code>RTCPeerConnection</code>
-        objects <code>pc1</code> and <code>pc2</code> are in global scope, so you can inspect them in the console as
-        well.</p>
-
-    <p>For more information about RTCPeerConnection, see <a href="http://www.html5rocks.com/en/tutorials/webrtc/basics/"
-                                                            title="HTML5 Rocks article about WebRTC by Sam Dutton">Getting
-        Started With WebRTC</a>.</p>
-
-
-    <a href="https://github.com/webrtc/samples/tree/gh-pages/src/content/peerconnection/pc1"
-       title="View source for this page on GitHub" id="viewSource">View source on GitHub</a>
-
+    <section id="statistics">
+        <div id="localTrackStats" class="output"></div>
+        <div id="mediaSourceStats" class="output"></div>
+        <div id="senderStats" class="output"></div>
+        <div id="receiverStats" class="output"></div>
+        <div id="transportStats" class="output"></div>
+    </section>
 </div>
-
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="js/main.js" async></script>
 

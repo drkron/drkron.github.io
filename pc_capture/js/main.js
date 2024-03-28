@@ -29,10 +29,23 @@ const minFramerateInput = document.getElementById('minFramerate');
 const maxFramerateInput = document.getElementById('maxFramerate');
 resWidth.oninput = resHeight.oninput = minFramerateInput.oninput = maxFramerateInput.oninput = displayRangeValue;
 
+const localTrackStatsDiv = document.querySelector('div#localTrackStats');
+const mediaSourceStatsDiv = document.querySelector('div#mediaSourceStats');
+const senderStatsDiv = document.querySelector('div#senderStats');
+const receiverStatsDiv = document.querySelector('div#receiverStats');
+const transportStatsDiv = document.querySelector('div#transportStats');
+
+const localVideoFpsDiv = document.querySelector('div#localVideoFramerate');
+const remoteVideoFpsDiv = document.querySelector('div#remoteVideoFramerate');
 
 let startTime;
-const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
+const localVideo = document.querySelector('div#localVideo video');
+const remoteVideo = document.querySelector('div#remoteVideo video');
+const localVideoSizeDiv = document.querySelector('div#localVideo div');
+const remoteVideoSizeDiv = document.querySelector('div#remoteVideo div'); 
+
+
+const prettyJson = (obj) => JSON.stringify(obj, null, 2);
 
 localVideo.addEventListener('loadedmetadata', function() {
   console.log(`Local video videoWidth: ${this.videoWidth}px,  videoHeight: ${this.videoHeight}px`);
@@ -65,6 +78,26 @@ let pc2;
 let videoTrack;
 let videoSettings;
 let transceiver;
+
+let prevStats = null;
+let prevOutStats = null;
+let prevInStats = null;
+let numInboundRtpReports = 0;
+let totalCaptureToEncodeDelay = 0;
+let totalEncodeDelay = 0;
+let totalPacketizationDelay = 0;
+let totalPacerDelay = 0;
+let totalPacketReceiveDelay = 0;
+let totalJitterBufferDelay = 0;
+let totalDecodeDelay = 0;
+let totalE2EDelay = 0;
+let oldReportTimeMs = 0;
+
+let oldTimestampMs = 0;
+let oldLocalFrames = 0;
+let localFps = 30;
+let oldRemoteFrames = 0;
+let remoteFps = 30;
 
 const offerOptions = {
   offerToReceiveAudio: 1,
@@ -307,3 +340,240 @@ function updateMaxBitrate() {
   transceiver.sender.setParameters(params);  
 }
 
+// Display statistics
+function showLocalStats(report) {
+  report.forEach(stats => {
+    const partialStats = {};
+    if (stats.type === 'media-source') {
+      partialStats.frames = stats.frames;
+      // The number of encoded frames during the last second.
+      partialStats.framesPerSecond = stats.framesPerSecond;
+      partialStats.height = stats.height;
+      partialStats.width = stats.width;
+      mediaSourceStatsDiv.textContent = `${stats.type}:\n` + prettyJson(partialStats);
+    } else if (stats.type === 'outbound-rtp') {
+      // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
+      const currOutStats = stats;
+      partialStats.contentType = currOutStats.contentType;
+      const mimeType = report.get(currOutStats.codecId).mimeType;
+      partialStats.codec = mimeType.split('/')[1];
+      partialStats.encoderImplementation = currOutStats.encoderImplementation;
+      partialStats.powerEfficientEncoder = currOutStats.powerEfficientEncoder;
+      partialStats.scalabilityMode = currOutStats.scalabilityMode;
+      partialStats.framesSent = currOutStats.framesSent;
+      partialStats.framesPerSecond = currOutStats.framesPerSecond;
+      partialStats.framesEncoded = currOutStats.framesEncoded;
+      partialStats.qualityLimitationDurations = currOutStats.qualityLimitationDurations;
+      // A record of the total time, in seconds, that this stream has spent in each quality
+      // limitation state.
+      partialStats.qualityLimitationReason = currOutStats.qualityLimitationReason;
+      partialStats.firCount = stats.firCount;
+      partialStats.pliCount = stats.pliCount;
+      
+      if (prevOutStats == null)
+        prevOutStats = currOutStats;
+      
+      const deltaEncodeTime = currOutStats.totalEncodeTime - prevOutStats.totalEncodeTime;
+      // The total number of seconds that packets have spent buffered locally before being
+      // transmitted onto the network. The time is measured from when a packet is emitted from the
+      // RTP packetizer until it is handed over to the OS network socket.
+      const deltaPacketSendDelay = currOutStats.totalPacketSendDelay - prevOutStats.totalPacketSendDelay;
+      const deltaPacketsSent = currOutStats.packetsSent - prevOutStats.packetsSent;
+      const deltaFramesEncoded = currOutStats.framesEncoded - prevOutStats.framesEncoded;
+      const deltaqpSum = currOutStats.qpSum - prevOutStats.qpSum;
+      const deltaQualityLimitNone = currOutStats.qualityLimitationDurations.none - prevOutStats.qualityLimitationDurations.none;
+      const deltaQualityLimitCpu = currOutStats.qualityLimitationDurations.cpu - prevOutStats.qualityLimitationDurations.cpu;
+      
+      const deltaOutStats =
+          Object.assign(partialStats,
+                        {"[qpSum/framesEncoded]": (deltaqpSum / deltaFramesEncoded).toFixed(1)},
+                        {ms:{"[totalEncodeTime/framesEncoded]": (1000 * deltaEncodeTime / deltaFramesEncoded).toFixed(1),
+                             "[totalPacketSendDelay/packetsSent]": (1000 * deltaPacketSendDelay / deltaPacketsSent).toFixed(1)}},
+                        {fps:{framesEncoded: currOutStats.framesEncoded - prevOutStats.framesEncoded,
+                              framesSent: currOutStats.framesSent - prevOutStats.framesSent}},
+                        {"%":{"qualityLimitationDurations.cpu": Math.min(100, (100 * deltaQualityLimitCpu).toFixed(1))}});
+      
+      senderStatsDiv.textContent = `${currOutStats.type}:\n` + prettyJson(deltaOutStats);
+      prevOutStats = currOutStats;
+    }
+  });
+}
+
+function showRemoteStats(report) {
+  
+  if (oldReportTimeMs == 0)
+    oldReportTimeMs = performance.now();
+  const now = performance.now();
+  const deltaReportTimeMs = now - oldReportTimeMs;
+  oldReportTimeMs = now;
+  // console.log(deltaReportTimeMs);
+  
+  report.forEach(stats => {
+    const partialStats = {};
+    if (stats.type === 'transport') {
+        // const candidatePair = report.get(stats.selectedCandidatePairId);
+        // if (candidatePair) {
+        //  partialStats.currentRoundTripTime = candidatePair.currentRoundTripTime;
+        //  transportStatsDiv.textContent = `${stats.type}:\n` + prettyJson(partialStats);
+        // }
+    } else if (stats.type === 'inbound-rtp') {
+      if (stats.remoteId != undefined) {
+        const remoteOutboundRtp = stats.get(report.remoteId);
+        console.log(remoteOutboundRtp);
+      }
+      // partialStats.decoderImplementation = stats.decoderImplementation;
+      // partialStats.powerEfficientDecoder = stats.powerEfficientDecoder;
+      partialStats.framesDecoded = stats.framesDecoded;
+      // The total number of frames dropped prior to decode or dropped because the frame missed its
+      // display deadline for this receiver's track.
+      partialStats.framesDropped = stats.framesDropped;
+      // The number of decoded frames in the last second
+      partialStats.decodedFramesPerSecond = stats.framesPerSecond;
+      // Represents the total number of complete frames received on this RTP stream.
+      partialStats.framesReceived = stats.framesReceived;
+      partialStats.freezeCount = stats.freezeCount;
+      // Count the total number of Full Intra Request (FIR) packets sent by this receiver.
+      partialStats.firCount = stats.firCount;
+      // Counts the total number of Picture Loss Indication (PLI) packets.
+      partialStats.pliCount = stats.pliCount;
+      
+      const timingFrameInfo = stats.googTimingFrameInfo;
+      let infos = [];
+      let currentE2Edelay = 0;
+      if (timingFrameInfo != undefined) { 
+        const infos = timingFrameInfo.split(',');
+        if (infos[1] >= 0 && infos[2] >= 0 && infos[3] >= 0
+            && infos[4] >= 0 && infos[5] >= 0 && infos[6] >= 0
+            && infos[7] >= 0) {
+          numInboundRtpReports++;
+          totalCaptureToEncodeDelay += infos[2] - infos[1];
+          totalEncodeDelay += infos[3] - infos[2];
+          totalPacketizationDelay += infos[4] - infos[3];
+          totalPacerDelay += infos[5] - infos[4];
+          totalPacketReceiveDelay += infos[9] - infos[8];
+          totalJitterBufferDelay += infos[10] - infos[9];
+          totalDecodeDelay += infos[11] - infos[10];
+          const e2e = infos[11] - infos[1];
+          totalE2EDelay += e2e;
+          currentE2Edelay = e2e;
+        }
+      } 
+      
+      if (prevInStats == null)
+        prevInStats = stats;
+      
+      // It is the sum of the time, in seconds, each video frame takes from the time the first RTP
+      // packet is received and to the time the corresponding sample or frame is decoded.
+      const deltaProcessingDelay = stats.totalProcessingDelay - prevInStats.totalProcessingDelay;
+      const deltaDecodeTime = stats.totalDecodeTime - prevInStats.totalDecodeTime;
+      // The average jitter buffer delay can be calculated by dividing the jitterBufferDelay with
+      // the jitterBufferEmittedCount.
+      const deltaJitterBufferDelay = stats.jitterBufferDelay - prevInStats.jitterBufferDelay;
+      const deltaJitterBufferEmittedCount = stats.jitterBufferEmittedCount - prevInStats.jitterBufferEmittedCount;
+      const deltaAssemblyTime = stats.totalAssemblyTime - prevInStats.totalAssemblyTime;
+      const deltaFramesAssembledFromMultiplePackets = stats.framesAssembledFromMultiplePackets - prevInStats.framesAssembledFromMultiplePackets;
+      
+      const deltaFramesDecoded = stats.framesDecoded - prevInStats.framesDecoded;
+      const deltaqpSum = stats.qpSum - prevInStats.qpSum;  
+      
+      const deltaInStats =
+          Object.assign(partialStats,
+                        {"[qpSum/framesDecoded]": (deltaqpSum / deltaFramesDecoded).toFixed(1)},
+                        {ms:{"[totalProcessingDelay/framesDecoded]": (1000 * deltaProcessingDelay / deltaFramesDecoded).toFixed(1),
+                             "[jitterBufferDelay/jitterBufferEmittedCount]": (1000 * deltaJitterBufferDelay / deltaJitterBufferEmittedCount).toFixed(1),
+                             "[totalDecodeTimeTime/framesDecoded]": (1000 * deltaDecodeTime / deltaFramesDecoded).toFixed(1),
+                             "[totalAssemblyTime/framesAssembledFromMultiplePackets]": (1000 * deltaAssemblyTime / deltaFramesAssembledFromMultiplePackets).toFixed(1),
+                             // Packet Jitter measured in seconds for this SSRC. Calculated as defined in section 6.4.1. of [RFC3550].
+                             jitter: (1000 * stats.jitter).toFixed(1),
+                             currentE2Edelay: currentE2Edelay}},
+                        {fps:{framesDecoded: stats.framesDecoded - prevInStats.framesDecoded,
+                              framesReceived: stats.framesReceived - prevInStats.framesReceived}},
+                        {"[TX mean] ms":{captureToEncodeDelay: (totalCaptureToEncodeDelay / numInboundRtpReports).toFixed(1),
+                                encodeDelay: (totalEncodeDelay / numInboundRtpReports).toFixed(1),
+                                packetizationDelay: (totalPacketizationDelay / numInboundRtpReports).toFixed(1),
+                                pacerDelay: (totalPacerDelay / numInboundRtpReports).toFixed(1)}},
+                        {"[RX mean] ms":{packetReceiveDelay: (totalPacketReceiveDelay / numInboundRtpReports).toFixed(1),
+                                jitterBufferDelay: (totalJitterBufferDelay / numInboundRtpReports).toFixed(1),
+                                decodeDelay: (totalDecodeDelay / numInboundRtpReports).toFixed(1)}},
+                        {"[E2E mean] ms":{E2Edelay: (totalE2EDelay / numInboundRtpReports).toFixed(1)}});
+      
+      receiverStatsDiv.textContent = 'remote ' + `${stats.type}:\n` + prettyJson(deltaInStats);
+      prevInStats = stats;
+    }
+  });
+}
+
+
+setInterval(() => {
+  if (localStream) {
+    const [track] = localStream.getTracks();
+    if (track.stats != undefined) {
+      const currStats = track.stats.toJSON();
+      currStats.droppedFrames = currStats.totalFrames - currStats.deliveredFrames - currStats.discardedFrames;
+      if (prevStats == null)
+        prevStats = currStats;
+      const deltaStats =
+        Object.assign(currStats,
+                    {fps:{delivered: currStats.deliveredFrames - prevStats.deliveredFrames,
+                          discarded: currStats.discardedFrames - prevStats.discardedFrames,
+                            dropped: currStats.droppedFrames - prevStats.droppedFrames,
+                            total: currStats.totalFrames - prevStats.totalFrames}});
+      localTrackStatsDiv.textContent = 'track.stats:\n' + prettyJson(deltaStats);
+      // localTrackStatsDiv.innerHTML = prettyJson(deltaStats).replaceAll(' ', '&nbsp;').replaceAll('\n', '<br/>');
+      prevStats = currStats;
+    }
+  }
+  if (pc1 && pc2) {
+    pc1
+        .getStats(null)
+        .then(showLocalStats, err => console.log(err));
+    pc2
+        .getStats(null)
+        .then(showRemoteStats, err => console.log(err));
+  }
+  if (localVideo.videoWidth) {
+    const width = localVideo.videoWidth;
+    const height = localVideo.videoHeight;
+    localVideoSizeDiv.innerHTML = `<strong>Local video dimensions:</strong> ${width}x${height}px`;
+    localVideoFpsDiv.innerHTML = `<strong>Local video framerate:</strong> ${localFps.toFixed(1)} fps`;
+  }
+  if (remoteVideo.videoWidth) {
+    const width = remoteVideo.videoWidth;
+    const height = remoteVideo.videoHeight;
+    remoteVideoSizeDiv.innerHTML = `<strong>Remote video dimensions:</strong> ${width}x${height}px`;
+    remoteVideoFpsDiv.innerHTML = `<strong>Remote video framerate:</strong> ${remoteFps.toFixed(1)} fps`;
+  }
+}, 1000);
+
+
+const updateVideoFps = () => {
+  const now = performance.now();
+  const periodMs = now - oldTimestampMs;
+  oldTimestampMs = now;
+  
+  if (localVideo.getVideoPlaybackQuality()) {
+    let newFps;
+    const newFrames = localVideo.getVideoPlaybackQuality().totalVideoFrames;
+    const framesSinceLast = newFrames - oldLocalFrames;
+    oldLocalFrames = newFrames;
+    if (framesSinceLast >= 0) {
+      newFps = 1000 * framesSinceLast / periodMs;
+      localFps = 0.7 * localFps + 0.3 * newFps;
+    }
+  }
+ 
+  if (remoteVideo.getVideoPlaybackQuality()) {
+    let newFps;
+    const newFrames = remoteVideo.getVideoPlaybackQuality().totalVideoFrames;
+    const framesSinceLast = newFrames - oldRemoteFrames;
+    oldRemoteFrames = newFrames;
+    if (framesSinceLast >= 0) {
+      newFps = 1000 * framesSinceLast / periodMs;
+      remoteFps = 0.7 * remoteFps + 0.3 * newFps;
+    }
+  }
+ 
+  setTimeout(updateVideoFps, 500);
+}
+
+setTimeout(updateVideoFps, 500);
