@@ -199,7 +199,12 @@ async function call() {
   const maxBitrate = document.getElementById('maxBitrate').valueAsNumber;
   var encodings = [];
   if (useSimulcastCheck.checked) {
-    encodings = [{rid: "one", maxBitrate: maxBitrate, maxFramerate: maxFramerateInput.value, scalabilityMode: "L1T2", scaleResolutionDownBy: 1.0} ];
+    var scalability = "L1T1";
+    if (codec.value = "VP8")  {
+      scalability = "L1T2";
+    }
+    console.log('Scalability: ', scalability);
+    encodings = [{rid: "one", maxBitrate: maxBitrate, maxFramerate: maxFramerateInput.value, scalabilityMode: acalability, scaleResolutionDownBy: 1.0} ];
   }
   else {  
     encodings = [{maxBitrate: maxBitrate}];
