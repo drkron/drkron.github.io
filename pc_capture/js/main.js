@@ -200,7 +200,7 @@ async function call() {
   var encodings = [];
   if (useSimulcastCheck.checked) {
     var scalability = "L1T1";
-    if (codec.value = "VP8")  {
+    if (codec.value == "VP8")  {
       scalability = "L1T2";
     }
     console.log('Scalability: ', scalability);
