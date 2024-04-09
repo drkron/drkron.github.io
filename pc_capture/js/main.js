@@ -204,7 +204,7 @@ async function call() {
       scalability = "L1T2";
     }
     console.log('Scalability: ', scalability);
-    encodings = [{rid: "one", maxBitrate: maxBitrate, maxFramerate: maxFramerateInput.value, scalabilityMode: acalability, scaleResolutionDownBy: 1.0} ];
+    encodings = [{rid: "one", maxBitrate: maxBitrate, maxFramerate: maxFramerateInput.value, scalabilityMode: scalability, scaleResolutionDownBy: 1.0} ];
   }
   else {  
     encodings = [{maxBitrate: maxBitrate}];
