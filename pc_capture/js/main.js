@@ -199,10 +199,10 @@ async function call() {
   const maxBitrate = document.getElementById('maxBitrate').valueAsNumber;
   var encodings = [];
   if (useSimulcastCheck.checked) {
-    var scalability = "L1T1";
-    if (codec.value == "VP8")  {
-      scalability = "L1T2";
-    }
+    var scalability = "L1T2";
+   // if (codec.value == "VP8")  {
+   //   scalability = "L1T2";
+   // }
     console.log('Scalability: ', scalability);
     encodings = [{rid: "one", maxBitrate: maxBitrate, maxFramerate: maxFramerateInput.value, scalabilityMode: scalability, scaleResolutionDownBy: 1.0} ];
   }
