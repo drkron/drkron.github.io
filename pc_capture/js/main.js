@@ -336,6 +336,19 @@ function hangup() {
   callButton.disabled = false;
 }
 
+function videoComplexity(avgQp, relativeComplexity) {
+  if (avgQp < 20 && relativeComplexity < 1) {
+    return "LOW";
+  }
+  if (relativeComplexity < 4) {
+    return "MEDIUM";
+  }
+  if (relativeComplexity < 40) {
+    return "HIGH"
+  }
+  return "OTHER";
+}
+
 function updateMaxBitrate() {
   let params = transceiver.sender.getParameters();
   const maxBitrate = document.getElementById('maxBitrate').valueAsNumber;
@@ -398,7 +411,12 @@ function showLocalStats(report) {
                               framesSent: currOutStats.framesSent - prevOutStats.framesSent}},
                         {"%":{"qualityLimitationDurations.cpu": Math.min(100, (100 * deltaQualityLimitCpu).toFixed(1))}});
       
-      senderStatsDiv.textContent = `${currOutStats.type}:\n` + prettyJson(deltaOutStats);
+      const qpAvg = deltaqpSum / deltaFramesEncoded;
+      const bpp = currOutStats.targetBitrate / (currOutStats.frameWidth * currOutStats.frameHeight * currOutStats.framesPerSecond);
+      const bppFactor = 0.255 * (qpAvg - 1) ** 1.3 + 1;
+      const relativeComplexity = bpp * bppFactor;
+      const complexity = videoComplexity(qpAvg, relativeComplexity);
+      senderStatsDiv.textContent = `Complexity: ${complexity}\n${currOutStats.type}:\n` + prettyJson(deltaOutStats);
       prevOutStats = currOutStats;
     }
   });
