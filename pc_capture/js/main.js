@@ -599,4 +599,29 @@ const updateVideoFps = () => {
   setTimeout(updateVideoFps, 500);
 }
 
+function handleCameraOpenSuccess(stream) {
+  const video = document.querySelector('video');
+  const videoTracks = stream.getVideoTracks();
+  console.log('Got stream');
+  console.log(`Using video device: ${videoTracks[0].label}`);
+  window.stream = stream; // make variable available to browser console
+  video.srcObject = stream;
+}
+
+async function initCamera(e) {
+  try {
+    const constraints = window.constraints = {
+      audio: false,
+      video: true
+    };    
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    handleCameraOpenSuccess(stream);
+    e.target.disabled = true;
+  } catch (e) {
+    ;
+  }
+}
+
+document.querySelector('#showVideo').addEventListener('click', e => initCamera(e));
+
 setTimeout(updateVideoFps, 500);
