@@ -43,6 +43,7 @@ const localVideo = document.querySelector('div#localVideo video');
 const remoteVideo = document.querySelector('div#remoteVideo video');
 const localVideoSizeDiv = document.querySelector('div#localVideo div');
 const remoteVideoSizeDiv = document.querySelector('div#remoteVideo div'); 
+const gumVideo = document.getElementById('gum-local');
 
 
 const prettyJson = (obj) => JSON.stringify(obj, null, 2);
@@ -600,12 +601,11 @@ const updateVideoFps = () => {
 }
 
 function handleCameraOpenSuccess(stream) {
-  const video = document.querySelector('video');
   const videoTracks = stream.getVideoTracks();
   console.log('Got stream');
   console.log(`Using video device: ${videoTracks[0].label}`);
   window.stream = stream; // make variable available to browser console
-  video.srcObject = stream;
+  gumVideo.srcObject = stream;
 }
 
 async function initCamera(e) {
