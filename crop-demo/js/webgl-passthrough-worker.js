@@ -130,6 +130,8 @@ function transform(frame, controller) {
     return;
   }
   
+  console.log(`[WebGL passthrough worker] format=${frame.format}`);
+  
   // Resize canvas and viewport (if necessary).
   const width = frame.displayWidth;
   const height = frame.displayHeight;
