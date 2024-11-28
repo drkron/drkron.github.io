@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Demo</title>
+    <link rel="stylesheet" href="css/main.css"/>
+  </head>
+  
+  <body>
+    <div class="video-container">
+      <video id="original" autoplay playsinline></video>
+      <video id="local" autoplay playsinline></video>
+      <video id="encoded" autoplay playsinline></video>
+    </div>
+    
+    <div class="pause-container">
+      <input id="pause" type="checkbox">Pause rendering</input>
+    </div>
+
+    <div class="gum-container">
+      <div class="button-group">
+        <button id="gum">getUserMedia</button>
+        <input id="renderEncoded" type="checkbox">Render the encoded stream</input>
+      </div>
+    </div>
+    
+    <div class="form-container">
+      <form>
+        <span>Crop rect:</span>
+        <label for="x">x:</label>
+        <input type="number" id="x" name="quantity" min="0" max="1280" style="width: 6ch;" value="640">
+        <label for="y">y:</label>
+        <input type="number" id="y" name="quantity" min="0" max="720" style="width: 6ch;" value="360">
+        <label for="width">width:</label>
+        <input type="number" id="width" name="quantity" min="0" max="1280" style="width: 6ch;" value="640">
+        <label for="height">height:</label>
+        <input type="number" id="height" name="quantity" min="0" max="720" style="width: 6ch;" value="360">
+      </form>
+    </div>
+    
+    <div class="pipe-container">
+      <input id="pipe" type="checkbox" checked>Use pipeThrough->pipeTo</input>
+    </div>
+    
+    <div class="crop-container">
+      <span>Crop & scale:</span>
+      <select id="crop">
+        <option value="passthrough" selected>Passthrough</option>
+        <option value="bbWebGlPassWorker">BB WebGL Passthrough Worker</option>
+        <option value="canvas" >Canvas</option>
+        <option value="bbworker">BB Worker</option>
+        <option value="bbmain">BB Main</option>
+        <option value="bbWebGlCropAndScaleWorker">BB WebGL Worker</option>
+      </select>
+    </div>
+    
+    <div class="peerconnection-container">
+      <select id="codec">
+        <option value="VP8">VP8</option>
+        <option value="VP9" selected>VP9</option>
+        <option value="H264">H264</option>
+       </select>
+      <span>scalabilityMode:</span>
+      <select id="scalabilityMode">
+        <option value="L1T1" selected>L1T1</option>
+        <option value="L1T2">L1T2</option>
+        <option value="none">none</option>
+       </select>
+      <button id="call">Call</button>
+      <input id="getStats" type="checkbox" checked>getStats</input>
+      <button id="stop">Stop</button>
+     </div>
+    
+    <div class="info-container">
+      <div id="constraints"></div>
+      <div id="videoSize"></div>
+      <div id="track"></div>
+      <div id="stats"></div>
+    </div>
+    
+    <div id="error-message"></div>
+    
+    <script src="js/main.js" defer></script>
+  </body>
+</html>
+
