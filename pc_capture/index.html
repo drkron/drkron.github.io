@@ -111,11 +111,22 @@
             </div>
         </div>
     </section>
-
+    
+    <section id="graphs">
+        <div class="graph-container" id="staticDynamicyGraph">
+            <div>0=static, 1=dynamic</div>
+            <canvas id="staticDynamicCanvas"></canvas>
+        </div>
+        <div class="graph-container" id="complexityGraph">
+            <div>Complexity score: bitrate * QP / (width * height * fps)</div>
+            <canvas id="complexityCanvas"></canvas>
+        </div>
+    </section>
+    
     <section id="statistics">
         <div id="localTrackStats" class="output"></div>
         <div id="mediaSourceStats" class="output"></div>
-        <div id="senderStats" class="output"></div>
+	<div id="senderStats" class="output"></div>
         <div id="receiverStats" class="output"></div>
         <div id="transportStats" class="output"></div>
     </section>
@@ -126,7 +137,6 @@
 </div>
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="js/main.js" async></script>
-
-<script src="../../../js/lib/ga.js"></script>
+<script src="js/graph.js"></script>
 </body>
 </html>

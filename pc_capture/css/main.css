@@ -35,6 +35,10 @@ div.box {
   margin: 1em;
 }
 
+section {
+  margin-bottom: 1em; /* Adjust the value as needed */
+}
+
 section#video > div {
   display: inline-block;
   margin: 0 20px 0 0;
@@ -67,4 +71,8 @@ video {
   video {
     height: 96px;
   }
+}
+
+div.graph-container {
+  margin: 0.5em;
 }

@@ -45,6 +45,11 @@ const localVideoSizeDiv = document.querySelector('div#localVideo div');
 const remoteVideoSizeDiv = document.querySelector('div#remoteVideo div'); 
 const gumVideo = document.getElementById('gum-local');
 
+let staticDynamicSeries;
+let staticDynamicGraph;
+
+let complexitySeries;
+let complexityGraph;
 
 const prettyJson = (obj) => JSON.stringify(obj, null, 2);
 
@@ -131,6 +136,12 @@ async function start() {
 
 function handleSuccess(stream) {
   startButton.disabled = true;
+
+  staticDynamicSeries = new TimelineDataSeries();
+  staticDynamicGraph = new TimelineGraphView('staticDynamicGraph', 'staticDynamicCanvas');
+
+  complexitySeries = new TimelineDataSeries();
+  complexityGraph = new TimelineGraphView('complexityGraph', 'complexityCanvas');
 
   localVideo.srcObject = stream;
   localStream = stream;
@@ -413,11 +424,20 @@ function showLocalStats(report) {
                         {"%":{"qualityLimitationDurations.cpu": Math.min(100, (100 * deltaQualityLimitCpu).toFixed(1))}});
       
       const qpAvg = deltaqpSum / deltaFramesEncoded;
-      const bpp = currOutStats.targetBitrate / (currOutStats.frameWidth * currOutStats.frameHeight * currOutStats.framesPerSecond);
-      const bppFactor = 0.255 * (qpAvg - 1) ** 1.3 + 1;
-      const relativeComplexity = bpp * bppFactor;
-      const complexity = videoComplexity(qpAvg, relativeComplexity);
-      senderStatsDiv.textContent = `Complexity: ${complexity}\n${currOutStats.type}:\n` + prettyJson(deltaOutStats);
+      // Make it into bps.
+      const bitrate = 8 * 1000.0 * (currOutStats.bytesSent - prevOutStats.bytesSent) / (currOutStats.timestamp - prevOutStats.timestamp);
+      const bpp = bitrate / (currOutStats.frameWidth * currOutStats.frameHeight * currOutStats.framesPerSecond);
+      const complexityScore = qpAvg * bpp;
+      //const bppFactor = 0.255 * (qpAvg - 1) ** 1.3 + 1;
+      //const relativeComplexity = bpp * bppFactor;
+      // const complexity = videoComplexity(qpAvg, relativeComplexity);
+      senderStatsDiv.textContent = prettyJson(deltaOutStats);
+
+      // The graph library does not like the performance.now() style `now`.
+      complexitySeries.addPoint(Date.now(), complexityScore);
+      complexityGraph.setDataSeries([complexitySeries]);
+      complexityGraph.updateEndDate();
+
       prevOutStats = currOutStats;
     }
   });
@@ -544,6 +564,14 @@ setInterval(() => {
                             total: currStats.totalFrames - prevStats.totalFrames}});
       localTrackStatsDiv.textContent = 'track.stats:\n' + prettyJson(deltaStats);
       // localTrackStatsDiv.innerHTML = prettyJson(deltaStats).replaceAll(' ', '&nbsp;').replaceAll('\n', '<br/>');
+
+      const fpsDelivered = (currStats.deliveredFrames - prevStats.deliveredFrames);// / (currStats.timestamp - prevStats.timestamp);
+      const isDynamic = fpsDelivered > 0.0; 
+
+      staticDynamicSeries.addPoint(Date.now(), isDynamic);
+      staticDynamicGraph.setDataSeries([staticDynamicSeries]);
+      staticDynamicGraph.updateEndDate();
+
       prevStats = currStats;
     }
   }
