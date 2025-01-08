@@ -19,6 +19,8 @@ startButton.addEventListener('click', start);
 callButton.addEventListener('click', call);
 hangupButton.addEventListener('click', hangup);
 applyButton.addEventListener('click', apply);
+copyButton.addEventListener('click', copyComplexityScores);
+clearComplexityScoresButton.addEventListener('click', clearComplexityScores);
 
 const useSimulcastCheck = document.getElementById('useSimulcast');
 const resolutionCheck = document.getElementById('resolutionCheck');
@@ -649,6 +651,25 @@ async function initCamera(e) {
     ;
   }
 }
+
+async function copyComplexityScores() {
+    const jsonString = complexitySeries.toJSON().values;
+    copyJSONToClipboard(jsonString);
+}
+
+async function clearComplexityScores() {
+ complexitySeries = new TimelineDataSeries();
+}
+
+async function copyJSONToClipboard(jsonString) {
+  try {
+    await navigator.clipboard.writeText(jsonString);
+    console.log('JSON copied to clipboard!');
+  } catch (err) {
+    console.error('Failed to copy JSON: ', err);
+  }
+}
+
 
 document.querySelector('#showVideo').addEventListener('click', e => initCamera(e));
 
