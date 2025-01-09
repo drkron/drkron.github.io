@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!--
+ *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree.
+-->
+<html>
+<head>
+
+    <meta charset="utf-8">
+    <meta name="description" content="WebRTC code samples">
+    <meta name="viewport" content="width=device-width, user-scalable=yes, initial-scale=1, maximum-scale=1">
+    <meta itemprop="description" content="Client-side WebRTC code samples">
+    <meta itemprop="image" content="../../../images/webrtc-icon-192x192.png">
+    <meta itemprop="name" content="WebRTC code samples">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta id="theme-color" name="theme-color" content="#ffffff">
+
+    <base target="_blank">
+
+    <title>Peer connection</title>
+
+    <link rel="icon" sizes="192x192" href="../../../images/webrtc-icon-192x192.png">
+    <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="css/main.css"/>
+
+</head>
+
+<body>
+
+<div id="container">
+    <h1><a href="//webrtc.github.io/samples/" title="WebRTC samples homepage">WebRTC samples</a>
+        <span>Peer connection</span></h1>
+
+    <p>This sample shows how to setup a connection between two peers using
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection">RTCPeerConnection</a>.
+    </p>
+    <table>
+    <tr>
+    <td>
+    <div id=localVideo class="VideoPlayer">
+      <video playsinline autoplay muted></video>
+      <div></div>
+      <div id="localVideoFramerate"></div>
+      <div>
+      <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
+      </div
+    </div>
+    </td><td>
+    <div class="VideoPlayer" id=remoteVideo>
+      <video playsinline autoplay></video>
+      <div></div>
+      <div id="remoteVideoFramerate"></div>      
+      <div>    
+        <button onclick="javascript:videoFullscreen(this)" title="Fullscreen">⛶</button>
+      </div>
+    </div>
+    </td></tr>
+    </table>    
+    <div class="box">
+        <button id="startButton">Start</button>
+        <button id="callButton">Call</button>
+        <button id="hangupButton">Hang Up</button>
+        <button id="applyButton">Apply Constraints</button>
+    </div>
+
+    <section id="transceiver">
+      <h2>Transceiver</h2>
+      <select id="codec">
+      <option value="VP8">VP8</option>
+      <option value="VP9">VP9</option>
+      <option value="AV1">AV1</option>
+      <option value="H264">H264</option>
+      </select> 
+
+      <label>
+      maxBitrate (bps):
+      <input type="number" id="maxBitrate" value="2500000"/>
+      </label>
+      <button onclick="javascript:updateMaxBitrate()">Update</button>
+      <br>
+      <input type="checkbox" id=useSimulcast>Use L1T2
+    </section>
+
+
+    <section id="constraints">
+        <div id="getDisplayMedia">
+            <div class="input">
+                <h2>Constraints</h2>
+                
+                <div id="resWidthDiv">
+                    <input type="checkbox" id=resolutionCheck>
+                    <label>Width <span>0</span> px</label>
+                    <input id=resWidth type="range" min=240 max=3000 value=1280 step=10>
+                </div>
+                <div id=resHeightDiv>
+                    <label>Height <span>0</span> px</label>
+                    <input id=resHeight type="range" min=240 max=3000 value=1280 step=10>
+                </div>
+                <div id="minFramerateDiv">
+                    <input type="checkbox" id=framerateCheck>
+                    <label>Min frameRate <span>0</span>fps:</label>
+                    <input id=minFramerate type="range" min="0" max="60" value="0">
+                </div>
+                <div id="maxFramerateDiv">
+                    <label>Max frameRate <span>30</span>fps:</label>
+                    <input id=maxFramerate type="range" min="0" max="60" value="30">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="graphs">
+        <div class="graph-container" id="staticDynamicyGraph">
+            <div>0=static, 1=dynamic</div>
+            <canvas id="staticDynamicCanvas"></canvas>
+        </div>
+        <div class="graph-container" id="complexityGraph">
+            <div>Complexity score: QP</div>
+            <canvas id="complexityCanvas"></canvas>
+        </div>
+        <button id="copyButton">Copy</button>
+        <button id="clearComplexityScoresButton">Clear</button>
+    </section>
+    
+    <section id="statistics">
+        <div id="localTrackStats" class="output"></div>
+        <div id="mediaSourceStats" class="output"></div>
+	<div id="senderStats" class="output"></div>
+        <div id="receiverStats" class="output"></div>
+        <div id="transportStats" class="output"></div>
+    </section>
+</div>
+<div>
+<video id="gum-local" autoplay playsinline></video>
+<button id="showVideo">Open camera</button>
+</div>
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="js/main.js" async></script>
+<script src="js/graph.js"></script>
+</body>
+</html>

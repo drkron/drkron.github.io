@@ -1,0 +1,78 @@
+button {
+  margin: 0 10px 0 0;
+}
+
+div.input {
+  display: inline-block;
+  margin: 0 4px 0 0;
+  vertical-align: top;
+  width: 310px;
+}
+
+div.input > div {
+  margin: 0 0 20px 0;
+  vertical-align: top;
+}
+
+div.output {
+  background-color: #eee;
+  display: inline-block;
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  font-size: 0.8em;
+  padding: 0px 0px 0px 5px;
+  position: relative;
+  top: 10px;
+  vertical-align: top;
+  white-space: pre;
+  max-width: fit-content;
+}
+
+table#constraints {
+  margin: 0px 0px 10px 10px;
+}
+
+div.box {
+  margin: 1em;
+}
+
+section {
+  margin-bottom: 1em; /* Adjust the value as needed */
+}
+
+section#video > div {
+  display: inline-block;
+  margin: 0 20px 0 0;
+  vertical-align: top;
+  width: calc(50% - 22px);
+}
+
+section#video > div div {
+  font-family: 'Inconsolata', 'Courier New', monospace;
+  font-size: 0.8em;
+}
+
+section#video {
+  width: calc(100% + 20px);
+}
+
+video {
+  --width: 95%;
+  width: var(--width);
+  height: calc(var(--width) * 0.75);
+  margin: 0 0 10px 0;
+}
+
+@media screen and (max-width: 720px) {
+  button {
+    width: 83px;
+    margin: 0 11px 10px 0;
+  }
+  
+  video {
+    height: 96px;
+  }
+}
+
+div.graph-container {
+  margin: 0.5em;
+}
