@@ -47,6 +47,7 @@ const localVideoSizeDiv = document.querySelector('div#localVideo div');
 const remoteVideoSizeDiv = document.querySelector('div#remoteVideo div'); 
 const gumVideo = document.getElementById('gum-local');
 
+let isDynamic;
 let staticDynamicSeries;
 let staticDynamicGraph;
 
@@ -440,6 +441,19 @@ function showLocalStats(report) {
       complexityGraph.setDataSeries([complexitySeries]);
       complexityGraph.updateEndDate();
 
+      let highMotion = 0;
+      if (isDynamic) {
+        if (codec.value == "VP8")  {
+          highMotion = complexityScore >= 0.445;
+        }
+        else if (codec.value == "AV1") {
+          highMotion = complexityScore > 0.71;
+        }
+      }
+      staticDynamicSeries.addPoint(Date.now(), isDynamic + highMotion);
+      staticDynamicGraph.setDataSeries([staticDynamicSeries]);
+      staticDynamicGraph.updateEndDate();
+
       prevOutStats = currOutStats;
     }
   });
@@ -568,11 +582,7 @@ setInterval(() => {
       // localTrackStatsDiv.innerHTML = prettyJson(deltaStats).replaceAll(' ', '&nbsp;').replaceAll('\n', '<br/>');
 
       const fpsDelivered = (currStats.deliveredFrames - prevStats.deliveredFrames);// / (currStats.timestamp - prevStats.timestamp);
-      const isDynamic = fpsDelivered > 0.0; 
-
-      staticDynamicSeries.addPoint(Date.now(), isDynamic);
-      staticDynamicGraph.setDataSeries([staticDynamicSeries]);
-      staticDynamicGraph.updateEndDate();
+      isDynamic = fpsDelivered > 0.0; 
 
       prevStats = currStats;
     }
