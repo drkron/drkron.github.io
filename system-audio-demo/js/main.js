@@ -8,7 +8,6 @@
 const audioOutputSelect = document.getElementById('audio-output');
 const gdmOptionsDiv = document.getElementById('gdm-options');
 const gdmTrackDiv = document.getElementById('gdm-track');
-const webAudioButton = document.getElementById('web-audio-start-stop');
 const gdmButton = document.getElementById('gdm');
 const gdmLocalAudioPlaybackCheckbox = document.getElementById('gdm-local-audio-playback');
 const gdmSystemAudioCheckbox = document.getElementById('gdm-system-audio');
@@ -21,7 +20,6 @@ const gdmRecordedAudio = document.getElementById('gdm-recorded-audio');
 const gdmRecordButton = document.getElementById('gdm-record');
 const gdmRecordedDiv = document.getElementById('gdm-recorded');
 const errorElement = document.getElementById('error-message');
-const gumCanvases = document.querySelectorAll('.gum-level-meter');
 const gdmCanvas = document.getElementById('gdm-level-meter');
 const pcAudio = document.getElementById('pc-audio-destination');
 
@@ -30,17 +28,9 @@ import { logi, logw, prettyJson } from './utils.js';
 // Set to true if at least one output device is detected.
 let hasSpeaker = false;
 let htmlAudio;
-let pcAudioSource;
-let pcMediaElementSource;
-let pcMediaSourceDestination;
-let mediaElementSource;
-// Index 0 <=> gUM with audio processing.
-// Index 1 <=> gUM without audio processing.
-let mediaStreamSources = [null, null];
 let gdmStream;
 let gdmMediaRecorder;
 let gdmRecordedBlobs;
-let gumAnimationFrameId = [null, null];
 let gdmAnimationFrameId;
 
 gdmStopButton.disabled = true;
@@ -50,11 +40,6 @@ gdmSystemAudioCheckbox.disabled = false;
 gdmRestrictOwnAudioCheckbox.disabled = false;
 
 const selectors = [audioOutputSelect];
-
-// const styles = window.getComputedStyle(gumButton);
-// const fontSize = styles.getPropertyValue('font-size');
-// logi('button font-size: ' + fontSize);
-
 
 class TrackedAudioContext extends AudioContext {
   constructor() {
@@ -199,8 +184,6 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     
     htmlAudio.addEventListener('canplay', playWhenReady);
   });
-  
-  await initWebAudio();
   
   gdmAudio.tag = 'gDM';
   
@@ -369,7 +352,7 @@ async function changeAudioOutput() {
   const deviceLabel = options[options.selectedIndex].label;
   
   // Set sink ID on these six audio elements using the spreading operator (...). 
-  const audioElements = [htmlAudio, ...gumAudios, ...gumRecordedAudios, gdmAudio, pcAudio];
+  const audioElements = [htmlAudio, gdmAudio, pcAudio];
   await Promise.all(audioElements.map(element => attachSinkId(element, deviceId, deviceLabel)));
   if (audioContext) {
     // await audioCtx.setSinkId({ type : 'none' });
@@ -406,49 +389,6 @@ async function attachSinkId(element, sinkId, label) {
      // Jump back to first output device in the list as it's the default.
      audioOutputSelect.selectedIndex = 0;
     loge(e);
-  }
-}
-
-/** 
- * Start/Stop playing out captured audio on WebAudio audio contexts.
- */
-async function playoutOnAudioContext(index) {
-  const stream = gumStreams[index];
-  if (!stream) {
-    return;
-  }
-  
-  if (!audioContext) {
-    audioContext = new AudioContext();
-  }
-  
-  // Always stop playout first.
-  if (mediaStreamSources[index]) {
-    mediaStreamSources[index].disconnect();
-    mediaStreamSources[index] = null;
-  }
-  
-  const [track] = stream.getAudioTracks();
-  const source = track.label;
-  const deviceId = audioOutputSelect.value;
-  
-  // Start playing out the local stream on a WebAudio context using an MSS.
-  if (gumPlayAudioContextCheckboxes[index].checked) {
-    mediaStreamSources[index] = audioContext.createMediaStreamSource(stream);
-    mediaStreamSources[index].connect(audioContext.destination);
-    
-    // Avoid explicitly setting `default` as sink ID since it is not supported on all browsers.
-    if (deviceId !== 'default') {
-      await audioContext.setSinkId(deviceId);
-      logi('[WebAudio] local playout sets audio output ' +
-          `[source: ${source}}][sink: ${getSelectedDevice(audioOutputSelect)}]`)
-    }
-    logi('[WebAudio] local playout starts ' +
-          `[source: ${source}}][sink: ${getSelectedDevice(audioOutputSelect)}]`)
-    logi(`AudioContext.sinkId=${audioContext.sinkId}`);
-  } else {
-    logi('[WebAudio] local playout stops ' +
-          `[source: ${source}}][sink: ${getSelectedDevice(audioOutputSelect)}]`)
   }
 }
 
