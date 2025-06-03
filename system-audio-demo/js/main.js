@@ -28,6 +28,7 @@ import { logi, logw, prettyJson } from './utils.js';
 // Set to true if at least one output device is detected.
 let hasSpeaker = false;
 let htmlAudio;
+let audioContext;
 let gdmStream;
 let gdmMediaRecorder;
 let gdmRecordedBlobs;
