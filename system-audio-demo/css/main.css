@@ -1,0 +1,159 @@
+body {
+  font-family: "Lucida Console", "Courier New", monospace;
+  font-size: 13.3333px;
+}
+
+button, input, select, form {
+  font-family: inherit;
+}
+
+.audio-device-container {
+  margin-left: 10px;
+  margin-bottom: 20px;
+}
+
+.restart {
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  /* gap: 1px; */ /* Adds spacing between checkbox and text */
+}
+
+label[for="restart-audio"] {
+  font-size: 13.3333px;
+  margin: 0;
+}
+
+label[for="gdm-local-audio-playback"] {
+  font-size: 13.3333px;
+  margin: 0;
+}
+
+label[for="gdm-system-audio"] {
+  font-size: 13.3333px;
+  margin: 0;
+}
+
+label[for="gdm-restrict-own-audio"] {
+  font-size: 13.3333px;
+  margin: 0;
+}
+
+label[for="gdm-mute"] {
+  font-size: 13.3333px;
+  margin: 0;
+}
+
+label[for="gdm-play-audio"] {
+  font-size: 13.3333px;
+  margin: 0;
+}
+
+.hidden-element {
+  visibility: hidden; /* Hides the element but preserves layout space */
+}
+
+.comment {
+  position: absolute;
+  top: -8px;  /* Adjust this value to fine-tune vertical position */
+  left: 10px; /* Adjust this value to fine-tune horizontal position */
+  background-color: white;
+  padding: 2px 5px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.web-audio-container {
+  margin-left: 10px;
+}
+
+.gdm-info-container {
+  margin-top: 10px;
+}
+
+.vertical-line {
+  border-left: 1px solid black;
+  height: 30px;
+  margin-left: 10px;
+}
+
+canvas {
+  display: inline-block;
+  border: 1px solid black;
+  background-color: rgb(250, 250, 250);
+  width: 60px;
+  height: 20px;
+}
+
+.gdm-info-container div {
+  margin-left: 10px;
+  padding-left: 5px;
+  padding-right: 5px;
+  background-color: rgb(250,250,250);
+  display: inline-block;
+  font-family: 'Roboto', 'sans-serif', monospace;
+  font-size: 0.9em;
+  top: 10px;
+  vertical-align: top;
+  white-space: pre;
+}
+
+.gdm-container {
+  position: relative; /* To position the comment relative to the container */
+  border: 1px solid darkgrey;
+  padding: 5px; /* Add some padding inside the container */
+  display: flex;
+  align-items: center;
+  margin: 0 10px; /* Add 10px margins to the left and right */
+}
+
+.gdm-container > * { /* Select all direct children of .gdm-container */
+  margin-left: 10px; 
+}
+
+.gdm-container > *:last-child { /* Select the last child */
+  margin-right: 0;  /* Remove margin from the last element */
+}
+
+figure {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  width: calc(100% - 20px);    /* Full viewport width minus 20px (10px left + 10px right) */
+  box-sizing: border-box;      /* Include padding and border in total width */
+  padding: 5px;               /* Optional padding inside the figure */
+  background-color: aliceblue; /* Light blue background color */
+}
+
+/* Wrap first audio + dropdown properly */
+.audio-container {
+  display: flex;
+  flex-direction: column;   /* Stack audio & dropdown */
+  align-items: flex-start;  /* Left-align to match other audio elements */
+  justify-content: center;  /* Ensure proper vertical alignment */
+}
+
+/* Keep the first audio aligned with the others */
+.audio-container audio {
+  align-self: center;  /* Ensures it aligns with the other audio elements */
+}
+
+/* Ensure dropdown is only as wide as needed */
+.file-select-style {
+  margin-top: 5px;
+  min-width: auto;   /* Let it fit the content */
+  width: max-content; /* Ensures it doesn't stretch unnecessarily */
+}
+
+#html-audio {
+  margin-right: 10px;
+}
+
+#webaudio-audio {
+  margin-right: 10px;
+}
+
+#error-message {
+  margin-top: 10px;
+  color: red;
+}
