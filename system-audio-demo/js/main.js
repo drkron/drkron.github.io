@@ -352,7 +352,7 @@ async function changeAudioOutput() {
   const deviceLabel = options[options.selectedIndex].label;
   
   // Set sink ID on these six audio elements using the spreading operator (...). 
-  const audioElements = [htmlAudio, gdmAudio, pcAudio];
+  const audioElements = [htmlAudio, gdmAudio];
   await Promise.all(audioElements.map(element => attachSinkId(element, deviceId, deviceLabel)));
   if (audioContext) {
     // await audioCtx.setSinkId({ type : 'none' });
