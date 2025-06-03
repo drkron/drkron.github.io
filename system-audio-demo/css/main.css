@@ -7,23 +7,6 @@ button, input, select, form {
   font-family: inherit;
 }
 
-.audio-device-container {
-  margin-left: 10px;
-  margin-bottom: 20px;
-}
-
-.restart {
-  margin-left: 10px;
-  display: flex;
-  align-items: center;
-  /* gap: 1px; */ /* Adds spacing between checkbox and text */
-}
-
-label[for="restart-audio"] {
-  font-size: 13.3333px;
-  margin: 0;
-}
-
 label[for="gdm-local-audio-playback"] {
   font-size: 13.3333px;
   margin: 0;

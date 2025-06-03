@@ -5,7 +5,6 @@
  * TODO: Check that a device can be changed while recording is ongoing.
  */
 
-const audioOutputSelect = document.getElementById('audio-output');
 const gdmOptionsDiv = document.getElementById('gdm-options');
 const gdmTrackDiv = document.getElementById('gdm-track');
 const gdmButton = document.getElementById('gdm');
@@ -21,13 +20,10 @@ const gdmRecordButton = document.getElementById('gdm-record');
 const gdmRecordedDiv = document.getElementById('gdm-recorded');
 const errorElement = document.getElementById('error-message');
 const gdmCanvas = document.getElementById('gdm-level-meter');
-const pcAudio = document.getElementById('pc-audio-destination');
 
 import { logi, logw, prettyJson } from './utils.js';
 
 // Set to true if at least one output device is detected.
-let hasSpeaker = false;
-let htmlAudio;
 let audioContext;
 let gdmStream;
 let gdmMediaRecorder;
@@ -114,82 +110,8 @@ function updateSourceLabel(element) {
   element.currentSourceLabel = source;
 }
 
-/** Extend the audio element with three extra properties. */
-function updateAudioElement(element, sinkId, label) {
-  updateSourceLabel(element);
-  // Extend the audio element with custom properties for logging purposes.
-  element.currentSinkId = sinkId;
-  element.currentSinkLabel = label;
-}
-
-
-const insertStereoSupportForOpus = (sdp) => {
-  // Early exit if Opus codec is not present
-  if (!sdp.includes("a=rtpmap:111 opus/48000")) {
-    logw("Opus codec (111) not found in SDP. Stereo support not added.");
-    return sdp;
-  }
-  
-  // Split SDP into lines
-  const lines = sdp.split('\r\n');
-
-  // Map through each line, find the target line, and append stereo support.
-  const newSdp = lines.map((line) => {
-    if (line.startsWith("a=fmtp:111")) {
-      if (!line.includes("stereo=1")) {
-        return `${line};stereo=1`;
-      }
-    }
-    return line;
-  });
-
-  // Join the lines back into a string with proper line breaks.
-  return newSdp.join("\r\n");
-};
-
-
 document.addEventListener('DOMContentLoaded', async (event) => {
-  await enumerateDevices();
-    
-  htmlAudio = document.getElementById('html-audio');
-  htmlAudio.volume = 0.3;
-  htmlAudio.tag = 'HTML';
-   
-  htmlAudio.addEventListener('play', (event) => {
-    logi('<audio> playout starts ' +
-      `[source: ${htmlAudio.currentSourceLabel}][sink: ${htmlAudio.currentSinkLabel}]`);
-  });
-  
-  // Event listener to update audio source when the selection changes
-  document.getElementById('audio-file-select').addEventListener('change', async (event) => {
-    const selectedFile = document.getElementById('audio-file-select').value;
-    
-    const wasPlaying = !htmlAudio.paused && htmlAudio.currentTime > 0;
-    logi('Audio was playing before change: ', wasPlaying);
-    
-    htmlAudio.src = selectedFile;
-    htmlAudio.currentSourceLabel = htmlAudio.src;
-    
-    async function playWhenReady() {
-      // Remove the listener to prevent multiple runs.
-      htmlAudio.removeEventListener('canplay', playWhenReady);
-
-      if (wasPlaying) {
-        try {
-          await htmlAudio.play();
-        } catch (e) {
-          loge(e);
-        }
-      }
-    }
-    
-    htmlAudio.addEventListener('canplay', playWhenReady);
-  });
-  
-  gdmAudio.tag = 'gDM';
-  
-  // Set default sink and source for all audio elements and the audio context.
-  changeAudioOutput();
+  gdmAudio.tag = 'gDM';  
 });
 
 
@@ -224,9 +146,6 @@ function printGdmAudioSettings(settings, options) {
   }, {});
   // Adding more properties manually from the supplied options.
   filteredSettings.systemAudio = options.systemAudio;
-  filteredSettings.preferCurrentTab = options.preferCurrentTab;
-  filteredSettings.selfBrowserSurface = options.selfBrowserSurface;
-  filteredSettings.surfaceSwitching = options.surfaceSwitching;
   filteredSettings.monitorTypeSurfaces = options.monitorTypeSurfaces;
   gdmOptionsDiv.textContent = '[gDM] Active options:\n' + prettyJson(filteredSettings);    
 };
@@ -268,130 +187,6 @@ gdmAudio.addEventListener('pause', (event) => {
   logi('<audio> playout stops ' +
     `[source: ${gdmAudio.currentSourceLabel}][sink: ${gdmAudio.currentSinkLabel}]`);
 });
-
-
-function updateDevices(listElement, devices) {
-  listElement.innerHTML = '';
-  devices.map(device => {
-    const deviceOption = document.createElement('option');
-    deviceOption.value = device.deviceId;
-    deviceOption.label = device.label;
-    deviceOption.text = device.label;
-    listElement.appendChild(deviceOption);
-  });
-};
-
-function getSelectedDevice(select) {
-  const options = select.options;
-  if (options.length == 0) {
-    return '';
-  }
-  const deviceLabel = options[options.selectedIndex].label;
-  return deviceLabel;
-};
-
-/**
- * Enumerate all devices and  deliver results (internally) as `MediaDeviceInfo` objects.
- * TODO: ensure that a device selection is maintained after a device is added or removed.
- */
-async function enumerateDevices() {
-  logi('enumerateDevices()');
-  hasSpeaker = false;
-  
-  // Store currently selected devices.
-  const selectedValues = selectors.map(select => select.value);
-  
-  try {
-    // MediaDevices: enumerateDevices()
-    // 
-    // Returns an array of `MediaDeviceInfo` objects. Each object in the array
-    // describes one of the available media input and output devices.
-    // The order is significant — the default capture devices will be listed first.
-    //
-    // Other than default devices, only devices for which permission has been granted are "available".
-    // 
-    // If the media device is an input device, an `InputDeviceInfo` object will be returned instead.
-    // See also: https://guidou.github.io/enumdemo4.html
-    // Chrome issue: https://g-issues.chromium.org/issues/390333516
-    
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    
-    // Filter out array of MediaDeviceInfo objects.
-    const deviceInfosOutput = devices.filter(device => device.kind === 'audiooutput');
-    hasSpeaker = deviceInfosOutput.length > 0;
-    logi(deviceInfosOutput);
-    // Clear all select elements and add the latest input and output devices.
-    updateDevices(audioOutputSelect, deviceInfosOutput);
-    
-    // Check if any <option> element inside the <select> element has a value matching
-    // selectedValues[selectorIndex]. If a match is found, assigns the value to select.value which
-    // selects the correct option. This approach ensures that a previously selected device is
-    // maintained as selection even after device changes (assuming that the old selection was not
-    // removed).
-    selectors.forEach((select, selectorIndex) => {
-      // The spread operator (...) converts the select.options HTMLCollection into a standard array.
-      if ([...select.options].some(option => option.value === selectedValues[selectorIndex])) {
-        select.value = selectedValues[selectorIndex];
-      }
-    });
-    
-  } catch (e) {
-    loge(e);
-  }
-};
-
-/**
- * Call HTMLMediaElement: setSinkId() on all available audio elements.
- */
-async function changeAudioOutput() {
-  if (!hasSpeaker) {
-    return;
-  }
-  // Read device ID and device label from the select options.
-  const options = audioOutputSelect.options;
-  const deviceId = audioOutputSelect.value;
-  const deviceLabel = options[options.selectedIndex].label;
-  
-  // Set sink ID on these six audio elements using the spreading operator (...). 
-  const audioElements = [htmlAudio, gdmAudio];
-  await Promise.all(audioElements.map(element => attachSinkId(element, deviceId, deviceLabel)));
-  if (audioContext) {
-    // await audioCtx.setSinkId({ type : 'none' });
-    if (deviceId !== 'default') {
-      await audioContext.setSinkId(deviceId);
-      logi('[WebAudio] playout sets audio ouput ' +
-        `[source: ${webAudioElement.currentSrc}][sink: ${getSelectedDevice(audioOutputSelect)}]`);
-    }
-  }
-}
-
-/** 
- * Attach audio output device to audio/video element using device/sink ID.
- * See also https://developer.chrome.com/blog/audiocontext-setsinkid.
- * Demo: https://sinkid.glitch.me/
- */
-async function attachSinkId(element, sinkId, label) {
-  if (typeof element.sinkId == 'undefined') {
-    logw('Browser does not support output device selection.');
-    return;
-  }
-  
-  try {
-    /**
-     * HTMLMediaElement: setSinkId()
-     * Set the ID of the audio device to use for output.
-     * The output device is set even if the element has no source to prepare for when it gets one.
-     */
-    await element.setSinkId(sinkId);
-    updateAudioElement(element, sinkId, label);
-    logi(`<${element.tag}> playout sets audio output [source: ${element.currentSourceLabel}]` +
-      `[sink: ${element.currentSinkLabel}]`);
-  } catch (e) {
-     // Jump back to first output device in the list as it's the default.
-     audioOutputSelect.selectedIndex = 0;
-    loge(e);
-  }
-}
 
 /** 
  * Encapsulates a level meter given a specified canvas object.
@@ -437,13 +232,6 @@ async function startLevelMeter(stream, canvas) {
   // Wait for one frame to be rendered to ensure a valid `animationFrameId`.
   await new Promise(resolve => requestAnimationFrame(resolve));
   return animationFrameId;
-};
-
-/** Set sink ID for all audio elements based on the latest output device selection. */
-audioOutputSelect.onchange = async () => {
-  const deviceLabel = getSelectedDevice(audioOutputSelect);
-  logi(`Selected output device: ${deviceLabel}`); 
-  await changeAudioOutput();
 };
 
 function startGdmRecording() {
