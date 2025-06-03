@@ -36,8 +36,6 @@ gdmLocalAudioPlaybackCheckbox.disabled = false;
 gdmSystemAudioCheckbox.disabled = false;
 gdmRestrictOwnAudioCheckbox.disabled = false;
 
-const selectors = [audioOutputSelect];
-
 class TrackedAudioContext extends AudioContext {
   constructor() {
     super();
