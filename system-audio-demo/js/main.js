@@ -355,15 +355,19 @@ async function startGdm() {
         logi('[gDM] MediaStreamTrack.ended: ' + audioTrack.label);
         stopGdm();
       });
-      
-      // The `autoplay` attribute of the audio tag is not set.
-      gdmAudio.srcObject = gdmStream;
-      updateSourceLabel(gdmAudio);
-      if (gdmPlayAudioButton.checked) {
-        await gdmAudio.play();
+    
+      if (audioTrack.readyState != 'ended') {  
+        // The `autoplay` attribute of the audio tag is not set.
+        gdmAudio.srcObject = gdmStream;
+        updateSourceLabel(gdmAudio);
+        if (gdmPlayAudioButton.checked) {
+          await gdmAudio.play();
+        }
+        gdmAnimationFrameId = startLevelMeter(gdmStream, gdmCanvas);      
       }
-      
-      gdmAnimationFrameId = startLevelMeter(gdmStream, gdmCanvas);
+      else {
+        logi('Audio track ended');
+      }
       
       gdmButton.disabled = true;
       gdmStopButton.disabled = false;
