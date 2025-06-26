@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>getDisplayMedia with System Audio Demo</title>
-    <h2>getDisplayMedia with System Audio Demo</h2>
+    <title>getDisplayMedia with System and Window Audio Demo</title>
+    <h2>getDisplayMedia with System and Window Audio Demo</h2>
     <link rel="stylesheet" href="css/main.css"/>
   </head>
   
@@ -14,14 +14,21 @@
     </div>
 
     <div class="gdm-container">
-      <div class="comment">getDisplayMedia with system audio capture</div>
+      <div class="comment">getDisplayMedia with system and window audio capture</div>
       <button id="gdm">getDisplayMedia</button>
       <input id="gdm-local-audio-playback" type="checkbox" checked></input>
       <label for="gdm-local-audio-playback">LocalAudioPlayback</label>
       <input id="gdm-system-audio" type="checkbox" checked></input>
       <label for="gdm-system-audio">systemAudio</label>
+      <label for="gdm-window-audio">windowAudio:</label>
+      <select id="gdm-window-audio">
+        <option value="notset">not set</option>
+        <option value="system">system</option>
+        <option value="window">window</option>
+        <option value="exclude">exclude</option>
+      </select>
       <input id="gdm-restrict-own-audio" type="checkbox"></input>
-      <label for="gdm-restrict-own-audio">restrictOwnAudio(WIP)</label>
+      <label for="gdm-restrict-own-audio">restrictOwnAudio</label>
       <button id="gdm-stop">Stop</button>
       <input id="gdm-mute" type="checkbox"></input>
       <label for="gdm-mute">Mute</label>

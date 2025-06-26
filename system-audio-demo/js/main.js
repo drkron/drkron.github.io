@@ -10,6 +10,7 @@ const gdmTrackDiv = document.getElementById('gdm-track');
 const gdmButton = document.getElementById('gdm');
 const gdmLocalAudioPlaybackCheckbox = document.getElementById('gdm-local-audio-playback');
 const gdmSystemAudioCheckbox = document.getElementById('gdm-system-audio');
+const gdmWindowAudioSelect = document.getElementById('gdm-window-audio');
 const gdmRestrictOwnAudioCheckbox = document.getElementById('gdm-restrict-own-audio');
 const gdmStopButton = document.getElementById('gdm-stop');
 const gdmMuteCheckbox = document.getElementById('gdm-mute');
@@ -34,6 +35,7 @@ gdmStopButton.disabled = true;
 gdmMuteCheckbox.disabled = false;
 gdmLocalAudioPlaybackCheckbox.disabled = false;
 gdmSystemAudioCheckbox.disabled = false;
+gdmWindowAudioSelect.disabled = false;
 gdmRestrictOwnAudioCheckbox.disabled = false;
 
 class TrackedAudioContext extends AudioContext {
@@ -330,16 +332,24 @@ async function startGdm() {
       systemAudio: (gdmSystemAudioCheckbox.checked ? 'include' : 'exclude'),
       monitorTypeSurfaces: 'include',
     };
+    if (gdmWindowAudioSelect.value != "notset") {
+      options['windowAudio'] = gdmWindowAudioSelect.value;
+    }
     logi('requested options to getDisplayMedia: ', prettyJson(options));
     
     /** 
      * MediaDevices: getDisplayMedia()
      */
     gdmStream = await navigator.mediaDevices.getDisplayMedia(options);
+    const [videoTrack] = gdmStream.getVideoTracks();
+    if (videoTrack) {
+      const settings = videoTrack.getSettings();
+      logi('[gDM] videoTrack.getSettings: ', settings);
+    }
     const [audioTrack] = gdmStream.getAudioTracks();
     if (audioTrack) {
       const settings = audioTrack.getSettings();
-      logi(settings);
+      logi('[gDM] audioTrack.getSettings: ', settings);
       printGdmAudioSettings(settings, options);
       printGdmAudioTrack(audioTrack);
     
@@ -373,6 +383,7 @@ async function startGdm() {
       gdmStopButton.disabled = false;
       gdmLocalAudioPlaybackCheckbox.disabled = true;
       gdmSystemAudioCheckbox.disabled = true;
+      gdmWindowAudioSelect.disabled = true;
       gdmRestrictOwnAudioCheckbox.disabled = true;
       gdmMuteCheckbox.disabled = false;
       gdmRecordButton.disabled = false;
@@ -408,6 +419,7 @@ function stopGdm() {
     gdmStopButton.disabled = true;
     gdmLocalAudioPlaybackCheckbox.disabled = false;
     gdmSystemAudioCheckbox.disabled = false;
+    gdmWindowAudioSelect.disable = false;
     gdmRestrictOwnAudioCheckbox.disabled = false;
     gdmMuteCheckbox.disabled = true;
     gdmRecordButton.textContent = 'Start Recording';

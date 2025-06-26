@@ -90,6 +90,15 @@ canvas {
   margin: 0 10px; /* Add 10px margins to the left and right */
 }
 
+label[for="gdm-window-audio"] {
+  font-size: 13.3333px;
+  margin-right: 0;
+}
+
+#gdm-window-audio {
+   margin-left: 0; /* Adjusts space after the dropdown */
+}
+
 .gdm-container > * { /* Select all direct children of .gdm-container */
   margin-left: 10px; 
 }
