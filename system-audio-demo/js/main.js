@@ -309,7 +309,7 @@ async function startGdm() {
   stopGdm();
   
   /** 
-   * MediaDevices: getDisplayMedia(options)
+   * MediaDevices: (options)
    *   audio.suppressLocalAudioPlayback = true => device_id	"loopbackWithMute"
    *   audio.suppressLocalAudioPlayback = false => device_id	"loopback"
    *   systemAudio = 'include' => "Also share system audio" in picker
@@ -409,9 +409,13 @@ gdmButton.onclick = async () => {
 
 function stopGdm() {
   if (gdmStream) {
-    const [track] = gdmStream.getAudioTracks();
-    if (track) {
-      track.stop();
+    const [audioTrack] = gdmStream.getAudioTracks();
+    if (audioTrack) {
+      audioTrack.stop();
+    }
+    const [videoTrack] = gdmStream.getVideoTracks();
+    if (videoTrack) {
+      videoTrack.stop();
     }
     gdmStream = null;
     gdmAudio.srcObject = null;
