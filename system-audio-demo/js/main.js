@@ -349,7 +349,17 @@ async function startGdm() {
     /** 
      * MediaDevices: getDisplayMedia()
      */
+
+    gdmButton.disabled = true;
     gdmStream = await navigator.mediaDevices.getDisplayMedia(options);
+    gdmStopButton.disabled = false;
+    gdmLocalAudioPlaybackCheckbox.disabled = true;
+    gdmSystemAudioCheckbox.disabled = true;
+    gdmWindowAudioSelect.disabled = true;
+    gdmRestrictOwnAudioCheckbox.disabled = true;
+    gdmMuteCheckbox.disabled = false;
+    gdmRecordButton.disabled = false;
+
     const [videoTrack] = gdmStream.getVideoTracks();
     if (videoTrack) {
       const settings = videoTrack.getSettings();
@@ -387,15 +397,6 @@ async function startGdm() {
       else {
         logi('Audio track ended');
       }
-      
-      gdmButton.disabled = true;
-      gdmStopButton.disabled = false;
-      gdmLocalAudioPlaybackCheckbox.disabled = true;
-      gdmSystemAudioCheckbox.disabled = true;
-      gdmWindowAudioSelect.disabled = true;
-      gdmRestrictOwnAudioCheckbox.disabled = true;
-      gdmMuteCheckbox.disabled = false;
-      gdmRecordButton.disabled = false;
     } else {
       // Keep video alive to ensure that the sharing pop-up UI is displayed.
       let deviceId;
