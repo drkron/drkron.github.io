@@ -20,9 +20,10 @@ const gdmRecordedAudio = document.getElementById('gdm-recorded-audio');
 const gdmRecordButton = document.getElementById('gdm-record');
 const gdmRecordedDiv = document.getElementById('gdm-recorded');
 const errorElement = document.getElementById('error-message');
+const warningElement = document.getElementById('warning-message');
 const gdmCanvas = document.getElementById('gdm-level-meter');
 
-import { logi, logw, prettyJson } from './utils.js';
+import { logi, prettyJson } from './utils.js';
 
 // Set to true if at least one output device is detected.
 let audioContext;
@@ -70,6 +71,13 @@ const loge = (error) => {
   }
   if (error !== '') {
     console.error(error);
+  }
+};
+
+const logw = (warning) => {
+  warningElement.textContent = warning === '' ? '' : `WARNING: ${warning}`;
+  if (warning !== '') {
+    console.warn(warning);
   }
 };
 
@@ -309,7 +317,7 @@ async function startGdm() {
   stopGdm();
   
   /** 
-   * MediaDevices: (options)
+   * MediaDevices: getDisplayMedia(options)
    *   audio.suppressLocalAudioPlayback = true => device_id	"loopbackWithMute"
    *   audio.suppressLocalAudioPlayback = false => device_id	"loopback"
    *   systemAudio = 'include' => "Also share system audio" in picker
@@ -322,6 +330,7 @@ async function startGdm() {
    * See also https://developer.chrome.com/docs/web-platform/screen-sharing-controls/.
    */
   try {
+    logw('');
     loge('');
     let options = {
       video: true,
@@ -388,15 +397,19 @@ async function startGdm() {
       gdmMuteCheckbox.disabled = false;
       gdmRecordButton.disabled = false;
     } else {
+      // Keep video alive to ensure that the sharing pop-up UI is displayed.
       let deviceId;
       const [videoTrack] = gdmStream.getVideoTracks();
       if (videoTrack) {
+        videoTrack.addEventListener('ended', () => {
+          logi('[gDM] MediaStreamTrack.ended: ' + videoTrack.label);
+          stopGdm();
+        });
         const settings = videoTrack.getSettings();
         deviceId = settings.deviceId;
-        videoTrack.stop();
-        gdmStream = null;
+
       }
-      loge(`No audio track exists for the selected source: ${deviceId}`);
+      logw(`No audio track exists for the selected source: ${deviceId}`);
     }
   } catch (e) {
     loge(e);

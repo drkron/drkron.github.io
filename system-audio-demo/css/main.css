@@ -148,4 +148,9 @@ figure {
 #error-message {
   margin-top: 10px;
   color: red;
+  }
+
+#warning-message {
+  margin-top: 10px;
+  color: green;
 }
