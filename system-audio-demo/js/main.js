@@ -352,13 +352,6 @@ async function startGdm() {
 
     gdmButton.disabled = true;
     gdmStream = await navigator.mediaDevices.getDisplayMedia(options);
-    gdmStopButton.disabled = false;
-    gdmLocalAudioPlaybackCheckbox.disabled = true;
-    gdmSystemAudioCheckbox.disabled = true;
-    gdmWindowAudioSelect.disabled = true;
-    gdmRestrictOwnAudioCheckbox.disabled = true;
-    gdmMuteCheckbox.disabled = false;
-    gdmRecordButton.disabled = false;
 
     const [videoTrack] = gdmStream.getVideoTracks();
     if (videoTrack) {
@@ -412,9 +405,19 @@ async function startGdm() {
       }
       logw(`No audio track exists for the selected source: ${deviceId}`);
     }
+    
+    gdmStopButton.disabled = false;
+    gdmLocalAudioPlaybackCheckbox.disabled = true;
+    gdmSystemAudioCheckbox.disabled = true;
+    gdmWindowAudioSelect.disabled = true;
+    gdmRestrictOwnAudioCheckbox.disabled = true;
+    gdmMuteCheckbox.disabled = false;
+    gdmRecordButton.disabled = false;
   } catch (e) {
     loge(e);
+    gdmButton.disabled = false;
   }
+
 }  
 
 gdmButton.onclick = async () => {
