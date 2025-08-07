@@ -19,7 +19,6 @@ startButton.addEventListener('click', start);
 callButton.addEventListener('click', call);
 hangupButton.addEventListener('click', hangup);
 applyButton.addEventListener('click', apply);
-clearComplexityScoresButton.addEventListener('click', clearComplexityScores);
 
 const useSimulcastCheck = document.getElementById('useSimulcast');
 const resolutionCheck = document.getElementById('resolutionCheck');
