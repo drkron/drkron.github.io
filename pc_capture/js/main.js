@@ -47,13 +47,6 @@ const localVideoSizeDiv = document.querySelector('div#localVideo div');
 const remoteVideoSizeDiv = document.querySelector('div#remoteVideo div'); 
 const gumVideo = document.getElementById('gum-local');
 
-let isDynamic;
-let staticDynamicSeries;
-let staticDynamicGraph;
-
-let complexitySeries;
-let complexityGraph;
-
 const prettyJson = (obj) => JSON.stringify(obj, null, 2);
 
 localVideo.addEventListener('loadedmetadata', function() {
@@ -139,12 +132,6 @@ async function start() {
 
 function handleSuccess(stream) {
   startButton.disabled = true;
-
-  staticDynamicSeries = new TimelineDataSeries();
-  staticDynamicGraph = new TimelineGraphView('staticDynamicGraph', 'staticDynamicCanvas');
-
-  complexitySeries = new TimelineDataSeries();
-  complexityGraph = new TimelineGraphView('complexityGraph', 'complexityCanvas');
 
   localVideo.srcObject = stream;
   localStream = stream;
@@ -426,33 +413,7 @@ function showLocalStats(report) {
                               framesSent: currOutStats.framesSent - prevOutStats.framesSent}},
                         {"%":{"qualityLimitationDurations.cpu": Math.min(100, (100 * deltaQualityLimitCpu).toFixed(1))}});
       
-      const qpAvg = deltaqpSum / deltaFramesEncoded;
-      // Make it into bps.
-      const bitrate = 8 * 1000.0 * (currOutStats.bytesSent - prevOutStats.bytesSent) / (currOutStats.timestamp - prevOutStats.timestamp);
-      const bpp = bitrate / (currOutStats.frameWidth * currOutStats.frameHeight * currOutStats.framesPerSecond);
-      const complexityScore = qpAvg * bpp;
-      //const bppFactor = 0.255 * (qpAvg - 1) ** 1.3 + 1;
-      //const relativeComplexity = bpp * bppFactor;
-      // const complexity = videoComplexity(qpAvg, relativeComplexity);
       senderStatsDiv.textContent = prettyJson(deltaOutStats);
-
-      // The graph library does not like the performance.now() style `now`.
-      complexitySeries.addPoint(Date.now(), complexityScore);
-      complexityGraph.setDataSeries([complexitySeries]);
-      complexityGraph.updateEndDate();
-
-      let highMotion = 0;
-      if (isDynamic) {
-        if (codec.value == "VP8")  {
-          highMotion = complexityScore >= 0.445;
-        }
-        else if (codec.value == "AV1") {
-          highMotion = complexityScore > 0.71;
-        }
-      }
-      staticDynamicSeries.addPoint(Date.now(), isDynamic + highMotion);
-      staticDynamicGraph.setDataSeries([staticDynamicSeries]);
-      staticDynamicGraph.updateEndDate();
 
       prevOutStats = currOutStats;
     }
@@ -582,7 +543,6 @@ setInterval(() => {
       // localTrackStatsDiv.innerHTML = prettyJson(deltaStats).replaceAll(' ', '&nbsp;').replaceAll('\n', '<br/>');
 
       const fpsDelivered = (currStats.deliveredFrames - prevStats.deliveredFrames);// / (currStats.timestamp - prevStats.timestamp);
-      isDynamic = fpsDelivered > 0.0; 
 
       prevStats = currStats;
     }
@@ -660,15 +620,6 @@ async function initCamera(e) {
   } catch (e) {
     ;
   }
-}
-
-async function copyComplexityScores() {
-    const jsonString = complexitySeries.toJSON().values;
-    copyJSONToClipboard(jsonString);
-}
-
-async function clearComplexityScores() {
- complexitySeries = new TimelineDataSeries();
 }
 
 async function copyJSONToClipboard(jsonString) {
