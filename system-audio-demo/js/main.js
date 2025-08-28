@@ -337,6 +337,9 @@ async function startGdm() {
       audio: {
         suppressLocalAudioPlayback: !gdmLocalAudioPlaybackCheckbox.checked,
         restrictOwnAudio: gdmRestrictOwnAudioCheckbox.checked,
+        echoCancellation: false,
+        autoGainControl: false,
+        noiseSuppression: false,
       },
       systemAudio: (gdmSystemAudioCheckbox.checked ? 'include' : 'exclude'),
       monitorTypeSurfaces: 'include',
