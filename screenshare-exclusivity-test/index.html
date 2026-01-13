@@ -10,16 +10,22 @@
         .video-box { background: #eee; padding: 10px; border-radius: 8px; border: 2px solid #ddd; }
         video { width: 100%; height: 200px; background: #000; margin-top: 10px; }
         
+        .controls { display: flex; flex-direction: column; gap: 10px; }
+        
         button { 
-            padding: 15px 25px; font-size: 16px; cursor: pointer; 
-            background: #007bff; color: white; border: none; border-radius: 4px;
-            margin-right: 10px;
+            padding: 10px 15px; font-size: 14px; cursor: pointer; 
+            border: none; border-radius: 4px; font-weight: bold;
         }
-        button:hover { background: #0056b3; }
+        .btn-start { background: #007bff; color: white; }
+        .btn-start:hover { background: #0056b3; }
+        
+        .btn-stop { background: #dc3545; color: white; }
+        .btn-stop:hover { background: #a71d2a; }
 
         .status { font-weight: bold; margin-bottom: 5px; font-family: monospace; }
         .live { color: green; }
         .ended { color: red; background: #ffe6e6; padding: 2px 5px; }
+        .stopped { color: orange; }
 
         #log { 
             margin-top: 30px; background: #222; color: #0f0; 
@@ -32,20 +38,23 @@
 
     <h2>Test: Does the OS kill Stream A when Stream B starts?</h2>
 
-    <div>
-        <button onclick="startStream('A')">1. Start Stream A</button>
-        <button onclick="startStream('B')">2. Start Stream B</button>
-    </div>
-
     <div class="grid">
         <div class="video-box">
             <h3>Stream A</h3>
+            <div class="controls">
+                <button class="btn-start" onclick="startStream('A')">1. Start Stream A</button>
+                <button class="btn-stop" onclick="stopStream('A')">Stop Stream A</button>
+            </div>
             <div id="status-A" class="status">Status: Idle</div>
             <video id="video-A" autoplay playsinline muted></video>
         </div>
 
         <div class="video-box">
             <h3>Stream B</h3>
+            <div class="controls">
+                <button class="btn-start" onclick="startStream('B')">2. Start Stream B</button>
+                <button class="btn-stop" onclick="stopStream('B')">Stop Stream B</button>
+            </div>
             <div id="status-B" class="status">Status: Idle</div>
             <video id="video-B" autoplay playsinline muted></video>
         </div>
@@ -54,6 +63,12 @@
     <div id="log"></div>
 
     <script>
+        // Store stream references so we can stop them manually
+        const streams = {
+            'A': null,
+            'B': null
+        };
+
         function log(msg) {
             const div = document.getElementById('log');
             const time = new Date().toISOString().split('T')[1].slice(0, -1);
@@ -76,6 +91,8 @@
                 const stream = await navigator.mediaDevices.getDisplayMedia({ 
                     video: { width: 640, height: 480 } 
                 });
+                
+                streams[id] = stream; // Store reference
                 const track = stream.getVideoTracks()[0];
 
                 log(`✅ <b>Stream ${id} STARTED</b> (Track ID: ${track.id.substring(0,8)}...)`);
@@ -83,6 +100,7 @@
                 // Play it in the UI
                 const video = document.getElementById(`video-${id}`);
                 video.srcObject = stream;
+                video.style.opacity = "1.0";
                 setStatus(id, "LIVE");
 
                 // --- THE CRITICAL TEST ---
@@ -95,6 +113,19 @@
 
             } catch (err) {
                 log(`❌ Error starting Stream ${id}: ${err.name} - ${err.message}`);
+            }
+        }
+
+        function stopStream(id) {
+            const stream = streams[id];
+            if (stream) {
+                log(`🛑 Manually stopping <b>Stream ${id}</b>...`);
+                stream.getTracks().forEach(t => t.stop());
+                setStatus(id, "STOPPED");
+                document.getElementById(`video-${id}`).style.opacity = "0.5";
+                streams[id] = null; // Clear reference
+            } else {
+                log(`⚠️ Stream ${id} is not active.`);
             }
         }
     </script>
