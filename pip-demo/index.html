@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picture-in-Picture Demo</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #playerContainer {
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            background-color: #000; /* Black background for video */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #player video {
+            display: block; /* Remove extra space below video */
+            width: 100%;
+            max-width: 640px; /* Example max width */
+            height: auto;
+            object-fit: contain; /* Ensures content scales down to fit, maintaining aspect ratio */
+            background-color: #000;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:active {
+            background-color: #004080;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Web Picture-in-Picture Example</h1>
+
+    <div id="playerContainer">
+        <div id="player">
+            <video id="video" controls autoplay muted loop>
+                <!-- <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                <source src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
+                Your browser does not support the video tag. -->
+            </video>
+        </div>
+    </div>
+
+    <button id="shareScreenButton">Share Screen</button>
+    <button id="pipButton">Open Picture-in-Picture window</button>
+
+    <script>
+        const videoElement = document.getElementById('video');
+        // Check if Document Picture-in-Picture API is available
+        if ('documentPictureInPicture' in window) {
+            const pipButton = document.getElementById('pipButton');
+
+            // Play the video on user interaction to allow PiP (only if original video is loaded)
+            videoElement.addEventListener('canplaythrough', () => {
+                if (!videoElement.srcObject) {
+                     videoElement.play().catch(e => console.error("Video autoplay failed:", e));
+                }
+            });
+
+
+            pipButton.addEventListener('click', async () => {
+                const player = document.querySelector("#player");
+
+                try {
+                    // Request a Picture-in-Picture window.
+                    const pipWindow = await documentPictureInPicture.requestWindow();
+
+                    // Inject CSS into the Picture-in-Picture window to make the video scale
+                    const style = pipWindow.document.createElement('style');
+                    style.textContent = `
+                        /* Ensure the video element scales to fill its container */
+                        #player video {
+                            display: block;
+                            width: 100%;
+                            height: 100%; /* Use 100% height to fill the window */
+                            object-fit: contain; /* Maintain aspect ratio */
+                            background-color: #000;
+                        }
+                        /* Optional: make the player container fill the body */
+                        #player {
+                            width: 100%;
+                            height: 100%;
+                        }
+                        /* Optional: remove default body margin in PiP window */
+                        body {
+                            margin: 0;
+                        }`;
+                    pipWindow.document.head.append(style);
+
+                    // Move the player to the Picture-in-Picture window.
+                    // pipWindow.document.body.append(player);
+
+                    // Optional: Add a message to the original page
+                    const originalPageMessage = document.createElement('p');
+                    originalPageMessage.textContent = 'Video moved to Picture-in-Picture window. Close the PiP window to bring it back.';
+                    originalPageMessage.style.textAlign = 'center';
+                    originalPageMessage.style.marginTop = '20px';
+                    document.body.append(originalPageMessage);
+
+                    // Listen for when the PiP window is closed to move the player back
+                    // pipWindow.addEventListener('pagehide', (event) => {
+                    //     document.querySelector("#playerContainer").append(player);
+                    //     originalPageMessage.remove(); // Remove the message when player is back
+                    //     style.remove(); // Remove the injected style element
+                    //     // When returning, if it was the original video, resume playback
+                    //     if (!videoElement.srcObject) {
+                    //          videoElement.play().catch(e => console.error("Failed to resume video after PiP:", e));
+                    //     }
+                    // });
+
+                } catch (error) {
+                    console.error('Failed to open Picture-in-Picture window:', error);
+                    alert('Could not open Picture-in-Picture window. Please ensure your browser supports Document Picture-in-Picture API and try again.');
+                }
+            });
+        } else {
+            // Inform the user if the API is not supported
+            const pipButton = document.getElementById('pipButton');
+            pipButton.disabled = true;
+            pipButton.textContent = 'Picture-in-Picture not supported in this browser';
+            // alert('Your browser does not support the Document Picture-in-Picture API.'); // Avoid multiple alerts on load
+        }
+
+        // New Screen Share logic
+        const shareScreenButton = document.getElementById('shareScreenButton');
+
+        if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+            shareScreenButton.addEventListener('click', async () => {
+                try {
+                    // Stop any existing stream before starting a new one
+                    if (videoElement.srcObject) {
+                        const tracks = videoElement.srcObject.getTracks();
+                        tracks.forEach(track => track.stop());
+                        videoElement.srcObject = null;
+                    }
+
+                    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                    videoElement.srcObject = stream;
+                    // Play the stream
+                    videoElement.play().catch(e => console.error("Failed to play screen share stream:", e));
+
+                    // Listen for when sharing stops (user clicks stop in browser UI or source disappears)
+                    stream.getVideoTracks()[0].addEventListener('ended', () => {
+                        console.log('Screen sharing stopped');
+                        videoElement.srcObject = null; // Clear the video source
+                        // Optionally, load the original video back
+                        videoElement.load(); // Reload the original sources defined in HTML
+                        videoElement.play().catch(e => console.error("Failed to resume original video after screen share:", e));
+                    });
+
+                } catch (error) {
+                    console.error('Error accessing display media:', error);
+                    alert('Could not start screen sharing: ' + error.message);
+                }
+            });
+        } else {
+            shareScreenButton.disabled = true;
+            shareScreenButton.textContent = 'Screen Sharing not supported';
+        }
+    </script>
+
+</body>
+</html>
+
+
