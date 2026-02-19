@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplikationsspelet</title>
+
+  <!-- Ladda in React och ReactDOM (gör att vi kan köra React i webbläsaren) -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Ladda in Babel (översätter React-koden så webbläsaren förstår den) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Ladda in Tailwind CSS för design och färger -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="antialiased">
+  
+  <!-- Här kommer spelet att visas -->
+  <div id="root"></div>
+
+  <!-- Vår kod skrivs här inne -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- Ikoner (ersätter importen från lucide-react) ---
+    const Play = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    );
+    const RotateCcw = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const Star = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    );
+    const CheckCircle = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    );
+    const XCircle = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+    );
+    const Calculator = ({ size = 24, className = "" }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/><path d="M8 18h.01"/><path d="M12 14h.01"/><path d="M12 18h.01"/></svg>
+    );
+
+    // --- Hjälpfunktioner ---
+    const shuffleArray = (array) => {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    };
+
+    const generateWrongProducts = (table, multiplier, correctAnswer) => {
+      const wrongAnswers = new Set();
+      const plausibleErrors = [
+        (table + 1) * multiplier, (table - 1) * multiplier,
+        table * (multiplier + 1), table * (multiplier - 1),
+        correctAnswer + 10, correctAnswer - 10
+      ];
+
+      for (let err of plausibleErrors) {
+        if (err > 0 && err !== correctAnswer && wrongAnswers.size < 3) {
+          wrongAnswers.add(err);
+        }
+      }
+
+      while (wrongAnswers.size < 3) {
+        const randomOffset = Math.floor(Math.random() * 10) + 1;
+        const randomWrong = Math.random() > 0.5 ? correctAnswer + randomOffset : correctAnswer - randomOffset;
+        if (randomWrong > 0 && randomWrong !== correctAnswer) {
+          wrongAnswers.add(randomWrong);
+        }
+      }
+      return Array.from(wrongAnswers);
+    };
+
+    const generateWrongExpressions = (table, multiplier, correctAnswer) => {
+      const wrongAnswers = new Set();
+      const generateExpr = (t, m) => `${t} × ${m}`;
+
+      const plausibleErrors = [
+        generateExpr(table + 1, multiplier), generateExpr(Math.max(1, table - 1), multiplier),
+        generateExpr(table, multiplier + 1), generateExpr(table, Math.max(1, multiplier - 1)),
+        generateExpr(multiplier, table + 1)
+      ];
+
+      for (let err of plausibleErrors) {
+        if (err !== correctAnswer && wrongAnswers.size < 3) {
+          wrongAnswers.add(err);
+        }
+      }
+
+      while (wrongAnswers.size < 3) {
+        const randT = Math.floor(Math.random() * 10) + 1;
+        const randM = Math.floor(Math.random() * 10) + 1;
+        const randExpr = generateExpr(randT, randM);
+        if (randExpr !== correctAnswer) {
+          wrongAnswers.add(randExpr);
+        }
+      }
+      return Array.from(wrongAnswers);
+    };
+
+    // --- Huvudappen ---
+    function App() {
+      const [gameState, setGameState] = useState('start');
+      const [selectedTables, setSelectedTables] = useState([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      const [questionCount, setQuestionCount] = useState(0);
+      const [score, setScore] = useState(0);
+      const [currentQuestion, setCurrentQuestion] = useState(null);
+      const [feedback, setFeedback] = useState(null);
+      const [selectedAnswer, setSelectedAnswer] = useState(null);
+      
+      const MAX_QUESTIONS = 10;
+
+      const toggleTable = (table) => {
+        setSelectedTables(prev => 
+          prev.includes(table) 
+            ? prev.filter(t => t !== table)
+            : [...prev, table].sort((a, b) => a - b)
+        );
+      };
+
+      const toggleAllTables = () => {
+        if (selectedTables.length === 10) {
+          setSelectedTables([5]);
+        } else {
+          setSelectedTables([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        }
+      };
+
+      const generateQuestion = () => {
+        const table = selectedTables[Math.floor(Math.random() * selectedTables.length)];
+        const multiplier = Math.floor(Math.random() * 10) + 1;
+        const isTypeProduct = Math.random() > 0.5;
+        
+        let questionText, correctAnswer, options;
+
+        if (isTypeProduct) {
+          questionText = `${table} × ${multiplier}`;
+          correctAnswer = table * multiplier;
+          const wrongAnswers = generateWrongProducts(table, multiplier, correctAnswer);
+          options = shuffleArray([correctAnswer, ...wrongAnswers]);
+        } else {
+          questionText = `${table * multiplier}`;
+          correctAnswer = `${table} × ${multiplier}`;
+          const wrongAnswers = generateWrongExpressions(table, multiplier, correctAnswer);
+          options = shuffleArray([correctAnswer, ...wrongAnswers]);
+        }
+
+        setCurrentQuestion({ text: questionText, correctAnswer, options, isTypeProduct });
+        setFeedback(null);
+        setSelectedAnswer(null);
+      };
+
+      const startGame = () => {
+        if (selectedTables.length === 0) return;
+        setScore(0);
+        setQuestionCount(0);
+        generateQuestion();
+        setGameState('playing');
+      };
+
+      const handleAnswer = (answer) => {
+        if (feedback !== null) return;
+
+        setSelectedAnswer(answer);
+        const isCorrect = answer === currentQuestion.correctAnswer;
+        
+        if (isCorrect) {
+          setScore(prev => prev + 1);
+          setFeedback('correct');
+        } else {
+          setFeedback('wrong');
+        }
+
+        setTimeout(() => {
+          if (questionCount + 1 >= MAX_QUESTIONS) {
+            setGameState('end');
+          } else {
+            setQuestionCount(prev => prev + 1);
+            generateQuestion();
+          }
+        }, 1500);
+      };
+
+      if (gameState === 'start') {
+        return (
+          <div className="min-h-screen bg-gradient-to-b from-blue-300 to-indigo-500 flex items-center justify-center p-4 font-sans text-slate-800">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-center">
+              <div className="flex justify-center mb-6">
+                <div className="bg-indigo-100 p-4 rounded-full text-indigo-500">
+                  <Calculator size={48} />
+                </div>
+              </div>
+              <h1 className="text-4xl font-extrabold mb-2 text-indigo-700">Multiplikations-Mästaren</h1>
+              <p className="text-lg text-slate-500 mb-8">Välj vilka tabeller du vill öva på!</p>
+              
+              <div className="grid grid-cols-5 gap-3 mb-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => toggleTable(num)}
+                    className={`p-3 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 active:scale-95 ${
+                      selectedTables.includes(num)
+                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-200'
+                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex justify-center gap-4 mb-8">
+                <button 
+                  onClick={toggleAllTables}
+                  className="text-indigo-500 font-semibold hover:text-indigo-700 underline underline-offset-4"
+                >
+                  {selectedTables.length === 10 ? 'Avmarkera alla' : 'Välj alla tabeller'}
+                </button>
+              </div>
+
+              <button
+                onClick={startGame}
+                disabled={selectedTables.length === 0}
+                className={`w-full py-4 rounded-2xl text-2xl font-bold text-white flex items-center justify-center gap-2 transition-all shadow-xl ${
+                  selectedTables.length === 0 
+                    ? 'bg-slate-300 cursor-not-allowed' 
+                    : 'bg-green-500 hover:bg-green-400 hover:scale-[1.02] active:scale-[0.98] shadow-green-200'
+                }`}
+              >
+                <Play size={28} />
+                Starta spelet
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'end') {
+        return (
+          <div className="min-h-screen bg-gradient-to-b from-blue-300 to-indigo-500 flex items-center justify-center p-4 font-sans text-slate-800">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center">
+              <div className="flex justify-center mb-6">
+                <Star size={64} className="text-yellow-400 fill-yellow-400 drop-shadow-lg animate-bounce" />
+              </div>
+              <h1 className="text-4xl font-extrabold mb-4 text-indigo-700">Bra jobbat!</h1>
+              <p className="text-xl text-slate-600 mb-8">
+                Du fick <span className="text-3xl font-bold text-green-500">{score}</span> av <span className="text-3xl font-bold">{MAX_QUESTIONS}</span> rätt!
+              </p>
+              
+              <button
+                onClick={() => setGameState('start')}
+                className="w-full py-4 rounded-2xl text-xl font-bold text-white bg-indigo-500 hover:bg-indigo-400 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <RotateCcw size={24} />
+                Spela igen
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-blue-300 to-indigo-500 flex flex-col items-center justify-center p-4 font-sans text-slate-800">
+          <div className="w-full max-w-2xl flex justify-between items-center mb-6 text-white font-bold text-xl px-4">
+            <div>Fråga {questionCount + 1} / {MAX_QUESTIONS}</div>
+            <div className="flex items-center gap-2">
+              <Star className="text-yellow-300 fill-yellow-300" size={24} />
+              {score} Poäng
+            </div>
+          </div>
+
+          <div className="w-full max-w-2xl bg-white/20 rounded-full h-3 mb-8 overflow-hidden">
+            <div 
+              className="bg-green-400 h-full transition-all duration-500 rounded-full"
+              style={{ width: `${((questionCount) / MAX_QUESTIONS) * 100}%` }}
+            ></div>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl text-center relative overflow-hidden">
+            <div className="mb-10 mt-4">
+              <p className="text-slate-500 text-lg font-semibold uppercase tracking-wider mb-2">
+                {currentQuestion.isTypeProduct ? 'Vad är produkten?' : 'Vilken uträkning stämmer?'}
+              </p>
+              <div className="text-7xl font-extrabold text-indigo-700 drop-shadow-sm">
+                {currentQuestion.text} <span className="text-indigo-300">=</span> ?
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {currentQuestion.options.map((option, index) => {
+                let buttonStyle = "bg-slate-50 border-4 border-slate-200 text-slate-700 hover:bg-indigo-50 hover:border-indigo-300";
+                if (feedback) {
+                  if (option === currentQuestion.correctAnswer) {
+                    buttonStyle = "bg-green-500 border-4 border-green-600 text-white shadow-lg shadow-green-200 scale-105";
+                  } else if (option === selectedAnswer) {
+                    buttonStyle = "bg-red-500 border-4 border-red-600 text-white scale-95 opacity-80";
+                  } else {
+                    buttonStyle = "bg-slate-100 border-4 border-slate-100 text-slate-400 opacity-50";
+                  }
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswer(option)}
+                    disabled={feedback !== null}
+                    className={`py-6 rounded-2xl text-3xl font-bold transition-all duration-300 transform flex items-center justify-center gap-3 ${buttonStyle}`}
+                  >
+                    {option}
+                    {feedback && option === currentQuestion.correctAnswer && (
+                      <CheckCircle size={32} className="animate-bounce" />
+                    )}
+                    {feedback === 'wrong' && option === selectedAnswer && (
+                      <XCircle size={32} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // --- Starta React-appen ---
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
+
