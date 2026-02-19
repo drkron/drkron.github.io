@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demokrati-utmaningen: 100 frågor</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #f59e0b;
+            --success: #10b981;
+            --error: #ef4444;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 { color: var(--primary); margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; font-style: italic; }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: transform 0.1s, background 0.2s;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+
+        .btn:hover { background: #1d4ed8; }
+        .btn:active { transform: scale(0.98); }
+
+        .option-btn {
+            background: #f1f5f9;
+            color: var(--text);
+            text-align: left;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+        }
+
+        .option-btn:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .correct { background: var(--success) !important; color: white; border-color: var(--success); }
+        .wrong { background: var(--error) !important; color: white; border-color: var(--error); }
+
+        #progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .hidden { display: none; }
+
+        #question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            min-height: 3em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Startskärm -->
+    <div id="start-screen">
+        <h1>Demokrati-utmaningen</h1>
+        <p class="subtitle">Testa dina kunskaper om folkstyre, rättigheter och hur Sverige styrs!</p>
+        <p>Varje omgång består av 10 slumpmässiga frågor från vår bank med 100 utmaningar.</p>
+        <button class="btn" onclick="startGame()">Starta spelet</button>
+    </div>
+
+    <!-- Spelskärm -->
+    <div id="quiz-screen" class="hidden">
+        <div id="progress-bar"><div id="progress-fill"></div></div>
+        <div id="stats">Fråga <span id="q-current">1</span> av 10</div>
+        <div id="question-text">Laddar fråga...</div>
+        <div id="options-container">
+            <button class="btn option-btn" onclick="handleOption(0)"></button>
+            <button class="btn option-btn" onclick="handleOption(1)"></button>
+            <button class="btn option-btn" onclick="handleOption(2)"></button>
+            <button class="btn option-btn" onclick="handleOption(3)"></button>
+        </div>
+    </div>
+
+    <!-- Resultatskärm -->
+    <div id="result-screen" class="hidden">
+        <h1>Bra jobbat!</h1>
+        <p>Du avslutade omgången med poängen:</p>
+        <div class="score-display"><span id="final-score">0</span> / 10</div>
+        <div id="feedback-text"></div>
+        <button class="btn" onclick="location.reload()">Spela igen</button>
+    </div>
+</div>
+
+<script>
+    const allQuestions = [
+        // 1-10: Grundbegrepp
+        { q: "Vad kommer ordet 'demokrati' ursprungligen ifrån?", a: "Grekiskan", b: "Latinet", c: "Fornnordiskan", d: "Franskan", correct: 0 },
+        { q: "Vad betyder det grekiska ordet 'demos'?", a: "Styre", b: "Lag", c: "Folk", d: "Rättvisa", correct: 2 },
+        { q: "Vad betyder det grekiska ordet 'kratos'?", a: "Styre", b: "Maktlöshet", c: "Kunskap", d: "Skola", correct: 0 },
+        { q: "Vad är den enklaste definitionen av ordet 'demokrati'?", a: "En bestämmer över alla", b: "Folkstyre", c: "Ingen får bestämma", d: "Endast rika får rösta", correct: 1 },
+        { q: "Vilket påstående stämmer bäst in på en demokrati?", a: "Vissa är mer värda än andra", b: "Bara män får bestämma", c: "Alla är lika mycket värda", d: "Man får inte tycka vad man vill", correct: 2 },
+        { q: "Vad innebär det att 'alla får vara med och bestämma'?", a: "Alla röstar om allt hela tiden", b: "Alla har rätt att påverka genom val", c: "Man får göra vad man vill utan regler", d: "Bara kungen bestämmer", correct: 1 },
+        { q: "I en demokrati är det fritt att...", a: "...skriva och tycka vad man vill", b: "...bryta mot alla lagar", c: "...diskriminera andra", d: "...tvinga andra att tycka som en själv", correct: 0 },
+        { q: "Vad betyder diskriminering?", a: "Att alla behandlas lika", b: "Att behandlas sämre än någon annan", c: "Att få rösta i valet", d: "Att läsa protokollet", correct: 1 },
+        { q: "Vilken är den största skillnaden mellan demokrati och diktatur gällande värde?", a: "I diktatur är alla lika värda", b: "I demokrati är vissa mer värda", c: "I demokrati är alla lika värda", d: "Det finns ingen skillnad", correct: 2 },
+        { q: "Vad händer ofta i en diktatur om man tycker annorlunda än de som bestämmer?", a: "Man får medalj", b: "Man riskerar fängelse eller våld", c: "Ingenting händer", d: "Man får vara med i regeringen", correct: 1 },
+
+        // 11-20: Demokrati vs Diktatur
+        { q: "Vem bestämmer i en diktatur?", a: "Hela folket", b: "En eller några få personer", c: "Bara barnen", d: "Ingen", correct: 1 },
+        { q: "Vilket av följande är ett kännetecken för diktatur?", a: "Fria val", b: "Yttrandefrihet", c: "Vissa människor behandlas sämre än andra", d: "Alla har samma rättigheter", correct: 2 },
+        { q: "Har alla samma rättigheter och skyldigheter i en diktatur?", a: "Ja, alltid", b: "Nej, oftast inte", c: "Bara på helger", d: "Det beror på vädret", correct: 1 },
+        { q: "Får man i en demokrati göra precis vad man vill?", a: "Ja, utan undantag", b: "Nej, man får inte diskriminera eller skada andra", c: "Bara om man är politiker", d: "Ja, så länge man är tyst", correct: 1 },
+        { q: "Vilken är en vanlig nackdel med demokrati?", a: "Att ingen får bestämma", b: "Att alla inte alltid får som de vill", c: "Att det inte finns några lagar", d: "Att man inte får prata", correct: 1 },
+        { q: "Vem vinner i en demokratisk omröstning?", a: "De som skriker högst", b: "Minoriteten", c: "Majoriteten (de flesta)", d: "Den äldsta personen", correct: 2 },
+        { q: "Varför kan vissa vara missnöjda i en demokrati?", a: "För att de aldrig får prata", b: "För att majoriteten bestämmer och de tillhör minoriteten", c: "För att de tvingas sitta i fängelse för sina åsikter", d: "För att det inte finns något val", correct: 1 },
+        { q: "Vad krävs för att en demokrati ska fungera bra?", a: "Att man slåss för sin åsikt", b: "Att man lyssnar och försöker förstå andra", c: "Att man aldrig ändrar sig", d: "Att bara en person pratar", correct: 1 },
+        { q: "Är 'fel' åsikter tillåtna i en demokrati?", a: "Nej, bara bra åsikter", b: "Ja, man har rätt att uttrycka sig så länge det inte är kränkande", c: "Bara om man viskar", d: "Endast i skolan", correct: 1 },
+        { q: "Vad kallas det när en liten grupp har all makt?", a: "Demokrati", b: "Klassråd", c: "Diktatur", d: "Elevråd", correct: 2 },
+
+        // 21-30: Demokrati i skolan
+        { q: "Vad är ett 'klassråd' ett exempel på?", a: "Representativ demokrati", b: "Diktatur", c: "Direkt demokrati", d: "Anarki", correct: 2 },
+        { q: "När alla i klassen är med och röstar direkt kallas det för...", a: "...indirekt styre", b: "...direkt demokrati", c: "...hemligt val", d: "...monarki", correct: 1 },
+        { q: "Vad är ett 'elevråd' ett exempel på?", a: "Direkt demokrati", b: "Diktatur", c: "Representativ demokrati", d: "Votering", correct: 2 },
+        { q: "I en representativ demokrati...", a: "...väljer man någon som för ens talan", b: "...bestämmer man allt själv", c: "...får ingen vara med", d: "...lottar man fram besluten", correct: 0 },
+        { q: "Vem sitter i ett elevråd?", a: "Bara lärare", b: "Representanter från de olika klasserna", c: "Bara rektorn", d: "Personer från andra skolor", correct: 1 },
+        { q: "Vilken form av demokrati används oftast i Sveriges riksdag?", a: "Direkt demokrati", b: "Representativ demokrati", c: "Envälde", d: "Ingen demokrati", correct: 1 },
+        { q: "Vad är syftet med ett elevråd?", a: "Att ge lärare mer semester", b: "Att eleverna ska få vara med och påverka skolan", c: "Att välja vilken mat man ska äta hemma", d: "Att bestämma över polisen", correct: 1 },
+        { q: "Vad innebär direkt demokrati i praktiken?", a: "Man väljer en ledare för 4 år", b: "Man röstar direkt på plats om ett förslag", c: "Man skriver en insändare", d: "Man låter rektorn bestämma", correct: 1 },
+        { q: "Varför väljer man representanter istället för att alla röstar om allt?", a: "För att det sparar tid och är mer praktiskt", b: "För att de flesta inte får rösta", c: "För att det är olagligt att rösta själv", d: "För att de rika ska bestämma", correct: 0 },
+        { q: "Kan man ha både direkt och representativ demokrati i skolan?", a: "Nej, aldrig", b: "Ja, t.ex. klassråd och elevråd", c: "Bara om det är lov", d: "Endast på gymnasiet", correct: 1 },
+
+        // 31-40: Hur ett möte går till
+        { q: "Vad kallas listan på punkter man ska prata om på ett möte?", a: "Protokoll", b: "Dagordning", c: "Talarlista", d: "Motion", correct: 1 },
+        { q: "Vem leder mötet och fördelar ordet?", a: "Sekreteraren", b: "Justeraren", c: "Ordföranden", d: "Kassören", correct: 2 },
+        { q: "Vad är en 'talarlista'?", a: "En lista på alla som är i rummet", b: "En lista på de som vill säga något under mötet", c: "Ett register över alla elever", d: "En lista på maträtter", correct: 1 },
+        { q: "Vem skriver ner vad som bestäms under ett möte?", a: "Ordföranden", b: "Justeraren", c: "Sekreteraren", d: "Statsministern", correct: 2 },
+        { q: "Vad kallas dokumentet där det står vad som hände på mötet?", a: "Dagordning", b: "Protokoll", c: "Proposition", d: "Röstsedel", correct: 1 },
+        { q: "Vad gör en 'justerare'?", a: "Städar rummet efteråt", b: "Kontrollerar att protokollet är rätt skrivet", c: "Bestämmer vem som får prata", d: "Samlar in rösterna", correct: 1 },
+        { q: "Vad innebär det att man 'röstar om ett förslag'?", a: "Man gissar vad andra tycker", b: "Man väljer vilket alternativ man stödjer", c: "Man skriver en bok", d: "Man lämnar rummet", correct: 1 },
+        { q: "Varför är det viktigt med ett protokoll?", a: "För att man ska komma ihåg vad man kommit överens om", b: "För att det är kul att skriva", c: "För att läraren ska kunna ge betyg i skrivning", d: "Det är inte viktigt alls", correct: 0 },
+        { q: "Vad händer om ordföranden inte följer dagordningen?", a: "Mötet blir rörigt och man glömmer punkter", b: "Man får gå hem tidigare", c: "Polisen kommer", d: "Ingenting händer", correct: 0 },
+        { q: "När justeras ett protokoll?", a: "Innan mötet börjar", b: "Efter att det har skrivits färdigt", c: "Under själva röstningen", d: "Vart fjärde år", correct: 1 },
+
+        // 41-50: Kommuner
+        { q: "Hur många kommuner finns det i Sverige?", a: "100", b: "290", c: "349", d: "10", correct: 1 },
+        { q: "Vad är en kommun?", a: "Hela Sverige", b: "En mindre del av Sverige", c: "Ett annat ord för skola", d: "En politisk ledare", correct: 1 },
+        { q: "Vilka bestämmer i en kommun?", a: "Riksdagen", b: "Kommunfullmäktige", c: "Kungen", d: "Polisen", correct: 1 },
+        { q: "Vad av följande bestämmer en kommun om?", a: "Utrikespolitik", b: "Lagar för hela landet", c: "Skolor och lekplatser", d: "Försvaret", correct: 2 },
+        { q: "Vem ansvarar för brandkåren i närområdet?", a: "Regionen", b: "Riksdagen", c: "Kommunen", d: "EU", correct: 2 },
+        { q: "Vilka ansvarar för parker och busstrafik lokalt?", a: "Regionen", b: "Statsministern", c: "Kommunen", d: "Företagen", correct: 2 },
+        { q: "När väljer vi representanter till kommunfullmäktige?", a: "Varje år", b: "Vart fjärde år", c: "När vi vill", d: "Bara när det är kris", correct: 1 },
+        { q: "Är Stockholm en kommun?", a: "Ja", b: "Nej, det är en region", c: "Nej, det är bara en stad", d: "Det är riksdagen", correct: 0 },
+        { q: "Vem får rösta i kommunalvalet?", a: "Bara de som äger hus", b: "De som fyllt 18 år och bor i kommunen", c: "Alla barn", d: "Bara de som jobbar i kommunen", correct: 1 },
+        { q: "Varför har vi så många kommuner i Sverige?", a: "För att det ska vara nära till besluten för invånarna", b: "För att det ska vara svårt att förstå", c: "För att de rika ska få mer makt", d: "För att kungen vill det", correct: 0 },
+
+        // 51-60: Val och rösträtt
+        { q: "Hur gammal måste man vara för att få rösta i Sverige?", a: "16 år", b: "18 år", c: "20 år", d: "21 år", correct: 1 },
+        { q: "Vilket krav finns utöver ålder för att få rösta till riksdagen?", a: "Man måste vara rik", b: "Man måste vara svensk medborgare", c: "Man måste ha ett jobb", d: "Man måste kunna grekiska", correct: 1 },
+        { q: "Hur ofta är det val i Sverige?", a: "Varje år", b: "Vart fjärde år", c: "Vart femte år", d: "Vart tionde år", correct: 1 },
+        { q: "Vilken månad är det alltid val i Sverige?", a: "Maj", b: "September", c: "December", d: "Augusti", correct: 1 },
+        { q: "När är nästa planerade valår i Sverige?", a: "2024", b: "2026", c: "2025", d: "2030", correct: 1 },
+        { q: "Hur många olika röstsedlar får man i vallokalen?", a: "En", b: "Två", c: "Tre", d: "Fyra", correct: 2 },
+        { q: "Vad röstar man till med de tre olika sedlarna?", a: "Skola, polis, brandkår", b: "Riksdag, kommun, region", c: "Kungen, regeringen, polisen", d: "Statsminister, talman, ordförande", correct: 1 },
+        { q: "Varför röstar man bakom en skärm?", a: "För att det inte ska blåsa på sedlarna", b: "För att ingen ska se vad man röstar på (hemliga val)", c: "För att man ska få sova lite", d: "För att man inte ska se de andra", correct: 1 },
+        { q: "Vad gör man med sina röster efter att man valt sedlar?", a: "Tar med dem hem", b: "Lägger dem i en låda/urna", c: "Ger dem till ordföranden direkt", d: "Kastar dem", correct: 1 },
+        { q: "Får vem som helst se vad du röstar på?", a: "Ja, det är offentligt", b: "Nej, man har rätt till hemliga val", c: "Bara ens föräldrar", d: "Bara läraren", correct: 1 },
+
+        // 61-70: De tre olika valen
+        { q: "Vad bestämmer man om i riksdagen?", a: "Saker som rör hela Sverige", b: "Bara lekplatser i din närhet", c: "Vem som ska vinna Melodifestivalen", d: "Bara soptömning", correct: 0 },
+        { q: "Vilket område ansvarar 'Regionen' främst för?", a: "Sjukvård", b: "Lagar om polisen", c: "Skolmaten", d: "Utrikespolitik", correct: 0 },
+        { q: "Vem bestämmer om kollektivtrafik (tåg/bussar) i ett större område?", a: "Kommunen", b: "Regionen", c: "EU", d: "Kungen", correct: 1 },
+        { q: "Vilket av följande är en riksdagsfråga?", a: "Byggande av en ny lekplats", b: "Lagar och ekonomi för hela landet", c: "Busstidtabeller i din stad", d: "Belysning i en park", correct: 1 },
+        { q: "Vem bestämmer om äldreomsorg och vatten/avlopp?", a: "Riksdagen", b: "Regionen", c: "Kommunen", d: "Polisen", correct: 2 },
+        { q: "Vad är sant om riksdagen?", a: "Det är Sveriges högsta beslutande församling", b: "Där bestämmer bara statsministern själv", c: "De bestämmer bara om sjukhus", d: "De bestämmer ingenting", correct: 0 },
+        { q: "Hur många ledamöter sitter i riksdagen?", a: "100", b: "290", c: "349", d: "500", correct: 2 },
+        { q: "Vem ansvarar för frågor som har med EU att göra?", a: "Kommunen", b: "Riksdagen", c: "Regionen", d: "Ingen", correct: 1 },
+        { q: "Vad betyder 'utrikespolitik'?", a: "Hur man bygger vägar", b: "Sveriges relationer med andra länder", c: "Regler för idrottsplatser", d: "Hur man odlar blommor", correct: 1 },
+        { q: "Vilka områden ansvarar regionen för?", a: "Sjukvård, kollektivtrafik och kultur", b: "Lagar, polis och försvar", c: "Skola, vatten och avlopp", d: "Lekplatser och parker", correct: 0 },
+
+        // 71-80: Politiska partier och riksdagen
+        { q: "Vad är ett politiskt parti?", a: "En grupp som tycker likadant om hur landet ska styras", b: "En sorts fest", c: "En skola för politiker", d: "Ett idrottslag", correct: 0 },
+        { q: "Vad är målet för ett parti i ett val?", a: "Att få så få röster som möjligt", b: "Att få så många röster som möjligt", c: "Att få sitta i fängelse", d: "Att sluta med politik", correct: 1 },
+        { q: "Hur många procent av rösterna måste ett parti ha för att komma in i riksdagen?", a: "1%", b: "4%", c: "10%", d: "50%", correct: 1 },
+        { q: "Vem leder arbetet i riksdagen?", a: "Statsministern", b: "Talmannen", c: "Kungen", d: "Ordföranden", correct: 1 },
+        { q: "Vad kallas ett förslag från en riksdagsledamot?", a: "Proposition", b: "Motion", c: "Protokoll", d: "Lag", correct: 1 },
+        { q: "Vad kallas ett förslag från regeringen?", a: "Motion", b: "Proposition", c: "Votering", d: "Debatt", correct: 1 },
+        { q: "Vad gör man i en debatt?", a: "Man röstar", b: "Man diskuterar olika förslag", c: "Man sover", d: "Man skriver protokoll", correct: 1 },
+        { q: "Vad kallas röstningen i riksdagen?", a: "Debatt", b: "Motion", c: "Votering", d: "Justering", correct: 2 },
+        { q: "Vilket parti får bilda regering?", a: "Det minsta partiet", b: "Det största partiet eller en grupp partier som är störst", c: "De som kungen väljer", d: "De som fuskar mest", correct: 1 },
+        { q: "Vad krävs för att ett förslag ska vinna i en votering?", a: "Att talmannen gillar det", b: "Att det får majoritet (flest röster)", c: "Att ingen protesterar", d: "Att det är kortfattat", correct: 1 },
+
+        // 81-90: Regeringen och makt
+        { q: "Vad kallas ledaren för regeringen?", a: "Talman", b: "Statsminister", c: "Kungen", d: "President", correct: 1 },
+        { q: "Vem har mest makt i Sverige?", a: "Talmannen", b: "Statsministern", c: "Kungen", d: "Polisen", correct: 1 },
+        { q: "Vilken roll har regeringen?", a: "Att styra landet och genomföra riksdagens beslut", b: "Att bara bestämma nya lagar själva", c: "Att sitta i riksdagen och bara lyssna", d: "Att döma folk till fängelse", correct: 0 },
+        { q: "Vad gör kungen i Sverige?", a: "Han bestämmer alla lagar", b: "Han är statschef men har ingen politisk makt", c: "Han väljer statsminister själv", d: "Han leder debatter i riksdagen", correct: 1 },
+        { q: "Kan ett parti styra ensamt om de har mer än 50% av rösterna?", a: "Ja", b: "Nej", c: "Bara om de frågar kungen", d: "Endast i kristider", correct: 0 },
+        { q: "Vad är en 'majoritetsregering'?", a: "En regering som har stöd av mer än hälften av riksdagen", b: "En regering som bara består av ett barn", c: "En regering som inte får bestämma", d: "En regering utan statsminister", correct: 0 },
+        { q: "Vad händer om regeringen inte får igenom sina förslag i riksdagen?", a: "De kan tvingas avgå", b: "De får fängelse", c: "De får bestämma ändå", d: "Ingenting", correct: 0 },
+        { q: "Vilket ord beskriver riksdagsledamöternas roll?", a: "Förmyndare", b: "Representanter", c: "Sekreterare", d: "Justerare", correct: 1 },
+        { q: "Varje parti har en...", a: "...egen kung", b: "...partiledare", c: "...egen riksdag", d: "...egen flagga", correct: 1 },
+        { q: "Vem genomför de beslut som riksdagen tar?", a: "Kungen", b: "Regeringen", c: "Regionen", d: "Polisen", correct: 1 },
+
+        // 91-100: Att påverka, historia och hot
+        { q: "Hur kan man påverka i en demokrati förutom att rösta?", a: "Genom att skriva insändare eller demonstrera", b: "Genom att hota politiker", c: "Man kan inte påverka på andra sätt", d: "Genom att låsa in de som tycker olika", correct: 0 },
+        { q: "När fick Sverige allmän och lika rösträtt för alla?", a: "1721", b: "1821", c: "1921", d: "2021", correct: 2 },
+        { q: "Fick kvinnor rösta förr i tiden?", a: "Ja, alltid", b: "Nej, inte förrän 1921", c: "Ja, men bara om de var rika", d: "Bara om de var gifta", correct: 1 },
+        { q: "Vad innebar det att kvinnor inte var 'myndiga' förr?", a: "Att de inte fick gå i skolan", b: "Att pappan eller maken bestämde över dem", c: "Att de inte fick arbeta", d: "Att de inte fick äta vad de ville", correct: 1 },
+        { q: "Vem kämpade mot apartheid i Sydafrika?", a: "Nelson Mandela", b: "Statsministern", c: "Talmannen", d: "Kungen", correct: 0 },
+        { q: "Vad var 'apartheid'?", a: "Ett demokratiskt system", b: "Ett rasistiskt system där svarta saknade rättigheter", c: "En sorts musik", d: "Ett politiskt parti", correct: 1 },
+        { q: "Vilket land kallades för 'Sovjetunionen' förr?", a: "USA", b: "Ryssland (och flera andra nationer)", c: "Tyskland", d: "Sydafrika", correct: 1 },
+        { q: "Vad är ett hot mot demokratin idag?", a: "Att folk röstar för mycket", b: "Ledare som ändrar lagar för att få mer makt", c: "Att barn får gå i skolan", d: "Att det finns för många bibliotek", correct: 1 },
+        { q: "Vad kallas det när ett land bara har en ledare att rösta på?", a: "Direkt demokrati", b: "Låtsasdemokrati eller diktatur", c: "Perfekt demokrati", d: "Monarki", correct: 1 },
+        { q: "Varför är det viktigt att kämpa för demokrati?", a: "För att skydda allas lika värde och frihet", b: "För att det är billigare", c: "För att politiker ska få högre lön", d: "Det är inte viktigt", correct: 0 }
+    ];
+
+    let currentQuestions = [];
+    let qIndex = 0;
+    let score = 0;
+
+    function startGame() {
+        // Slumpa 10 frågor från de 100
+        currentQuestions = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+        qIndex = 0;
+        score = 0;
+        
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const qObj = currentQuestions[qIndex];
+        document.getElementById('q-current').innerText = qIndex + 1;
+        document.getElementById('question-text').innerText = qObj.q;
+        
+        const buttons = document.querySelectorAll('.option-btn');
+        const options = [qObj.a, qObj.b, qObj.c, qObj.d];
+        
+        buttons.forEach((btn, i) => {
+            btn.innerText = options[i];
+            btn.className = 'btn option-btn'; // Reset classes
+            btn.disabled = false;
+        });
+
+        const progress = ((qIndex) / 10) * 100;
+        document.getElementById('progress-fill').style.width = progress + '%';
+    }
+
+    function handleOption(idx) {
+        const qObj = currentQuestions[qIndex];
+        const buttons = document.querySelectorAll('.option-btn');
+        
+        // Disable all buttons immediately
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (idx === qObj.correct) {
+            buttons[idx].classList.add('correct');
+            score++;
+        } else {
+            buttons[idx].classList.add('wrong');
+            buttons[qObj.correct].classList.add('correct');
+        }
+
+        setTimeout(() => {
+            qIndex++;
+            if (qIndex < 10) {
+                showQuestion();
+            } else {
+                endGame();
+            }
+        }, 1500);
+    }
+
+    function endGame() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        document.getElementById('final-score').innerText = score;
+        
+        let feedback = "";
+        if (score === 10) feedback = "Fantastiskt! Du är en riktig demokratiexpert!";
+        else if (score >= 7) feedback = "Riktigt bra jobbat! Du har koll på läget.";
+        else if (score >= 5) feedback = "Helt okej, men läs gärna texten en gång till för att få alla rätt!";
+        else feedback = "Demokrati är svårt men viktigt. Ge inte upp, försök igen!";
+        
+        document.getElementById('feedback-text').innerText = feedback;
+    }
+</script>
+
+</body>
+</html>
+
