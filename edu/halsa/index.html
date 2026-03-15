@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hälsospelet - För Rafael</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap');
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4; /* Light green bg */
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .match-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .match-item:hover:not(.matched):not(.selected) {
+            transform: scale(1.02);
+            background-color: #e0e7ff;
+        }
+
+        .match-item.selected {
+            background-color: #818cf8;
+            color: white;
+            border-color: #4f46e5;
+        }
+
+        .match-item.matched {
+            background-color: #86efac;
+            color: #166534;
+            border-color: #22c55e;
+            opacity: 0.7;
+            cursor: default;
+        }
+
+        .match-item.error {
+            animation: shake 0.4s;
+            background-color: #fca5a5;
+            color: #7f1d1d;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+        }
+
+        /* Confetti */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            z-index: 1000;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="game-container" class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 w-full max-w-4xl relative overflow-hidden">
+        
+        <!-- START SCREEN -->
+        <div id="start-screen" class="text-center fade-in">
+            <div class="text-6xl mb-4">🏃‍♂️🥗🧠</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-green-600 mb-6">Hälsospelet</h1>
+            <p class="text-xl text-gray-600 mb-8">Hej Rafael! Redo att testa dina kunskaper om kropp och hälsa? Spelet har 80 kluriga frågor baserat på det du har läst.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-left">
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200">
+                    <i class="fas fa-list-ul text-blue-500 mb-2 text-2xl"></i>
+                    <h3 class="font-bold">Del 1: Flervalsfrågor</h3>
+                    <p class="text-sm text-gray-600">30 frågor där du väljer rätt alternativ.</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-xl border border-purple-200">
+                    <i class="fas fa-keyboard text-purple-500 mb-2 text-2xl"></i>
+                    <h3 class="font-bold">Del 2: Fyll i luckan</h3>
+                    <p class="text-sm text-gray-600">30 meningar där ett ord saknas.</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-xl border border-orange-200">
+                    <i class="fas fa-link text-orange-500 mb-2 text-2xl"></i>
+                    <h3 class="font-bold">Del 3: Para ihop</h3>
+                    <p class="text-sm text-gray-600">20 ord som ska paras ihop rätt.</p>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full text-xl transition transform hover:scale-105 shadow-lg">
+                Starta spelet!
+            </button>
+        </div>
+
+        <!-- GAME UI (Hidden initially) -->
+        <div id="game-ui" class="hidden">
+            <!-- Header (Progress & Score) -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <span class="text-sm font-bold text-gray-400 uppercase tracking-wider" id="phase-title">Fas 1</span>
+                    <h2 class="text-2xl font-bold text-gray-800" id="question-counter">Fråga 1 av 80</h2>
+                </div>
+                <div class="bg-yellow-100 px-4 py-2 rounded-2xl border-2 border-yellow-400 flex items-center shadow-sm">
+                    <i class="fas fa-star text-yellow-500 mr-2 text-xl"></i>
+                    <span id="score-display" class="font-bold text-xl text-yellow-700">0</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-3 mb-8">
+                <div id="progress-bar" class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+
+            <!-- Question Area -->
+            <div id="question-area" class="min-h-[300px]">
+                <!-- Content injected via JS -->
+            </div>
+
+            <!-- Feedback Area -->
+            <div id="feedback-area" class="mt-6 text-center hidden">
+                <p id="feedback-text" class="text-xl font-bold mb-4"></p>
+                <button id="next-btn" onclick="nextQuestion()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-lg transition hidden mx-auto">
+                    Nästa <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- END SCREEN (Hidden initially) -->
+        <div id="end-screen" class="hidden text-center fade-in py-10">
+            <div class="text-7xl mb-4">🏆</div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-green-600 mb-4">Snyggt jobbat, Rafael!</h1>
+            <p class="text-2xl text-gray-700 mb-6">Du har slutfört alla 80 frågor om hälsa!</p>
+            <div class="bg-yellow-100 inline-block p-6 rounded-3xl border-4 border-yellow-400 mb-8">
+                <p class="text-lg text-yellow-800 font-bold mb-2">Din slutpoäng:</p>
+                <p class="text-6xl font-black text-yellow-600"><span id="final-score"></span> / 80</p>
+            </div>
+            <p id="final-message" class="text-xl text-gray-600 mb-8"></p>
+            <button onclick="location.reload()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-full text-lg transition shadow-lg">
+                Spela igen
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA ---
+        // Del 1: 30 Flervalsfrågor
+        const mcQuestions = [
+            { q: "Vad är Världshälsoorganisationens (WHO) definition av hälsa?", options: ["Att man inte är sjuk.", "Ett tillstånd av fullständigt fysiskt, psykiskt och socialt välbefinnande.", "Att man tränar varje dag."], correct: 1 },
+            { q: "Varför behöver vi rörelse och fysisk aktivitet?", options: ["För att må bra.", "För att sova mindre.", "För att kunna sitta stilla längre."], correct: 0 },
+            { q: "Vad händer med skelettet när man tränar?", options: ["Det blir mjukare.", "Det stärks.", "Det blir lättare."], correct: 1 },
+            { q: "Vilken sjukdom förebygger man när man stärker skelettet?", options: ["Förkylning", "Benskörhet", "Huvudvärk"], correct: 1 },
+            { q: "Vad händer med immunförsvaret om man motionerar lagom?", options: ["Det försvagas.", "Det påverkas inte.", "Det stärks."], correct: 2 },
+            { q: "Vad kallas den motion vi gör till vardags utan att byta om?", options: ["Elitidrott", "Vardagsmotion", "Styrketräning"], correct: 1 },
+            { q: "Vilket av följande är ett bra exempel på vardagsmotion?", options: ["Spela tv-spel", "Cykla eller gå i trapporna", "Åka bil till skolan"], correct: 1 },
+            { q: "Vad händer med självförtroendet när man motionerar?", options: ["Det blir sämre", "Det påverkas inte", "Man får ett bra självförtroende"], correct: 2 },
+            { q: "Konditionen är en färskvara. Vad betyder det?", options: ["Att man bara kan träna på sommaren.", "Att man måste träna regelbundet för att behålla den.", "Att den alltid är bra oavsett vad man gör."], correct: 1 },
+            { q: "Hur ofta bör man helst träna?", options: ["Två till tre gånger i veckan", "En gång i månaden", "Varje dag i flera timmar"], correct: 0 },
+            { q: "Ska man träna när man är sjuk?", options: ["Ja, det svettas ut sjukdomen.", "Nej, det är farligt för kroppen.", "Bara om man har feber."], correct: 1 },
+            { q: "Hur många timmars sömn behöver kroppen generellt per dygn?", options: ["4-6 timmar", "8-10 timmar", "12-14 timmar"], correct: 1 },
+            { q: "Hur mycket sömn behöver en vuxen person per dygn?", options: ["6-8 timmar", "8-10 timmar", "4-5 timmar"], correct: 0 },
+            { q: "Varför är det viktigt att vila och sova ordentligt?", options: ["För att kroppen bygger upp energilagren.", "För att slippa äta frukost.", "För att musklerna ska försvinna."], correct: 0 },
+            { q: "Vilket av följande är ett exempel på avslappning?", options: ["Springa ett maraton", "Avslappning till musik eller massage", "Göra ett svårt matteprov"], correct: 1 },
+            { q: "Hur många huvudmål mat bör man äta per dag för att må bra?", options: ["Ett", "Tre", "Fem"], correct: 1 },
+            { q: "Hur många mellanmål bör man äta per dag?", options: ["Två", "Fyra", "Inga"], correct: 0 },
+            { q: "När behöver man äta ett kvällsmål?", options: ["Alltid", "Bara på helgen", "Om man tränar på kvällen"], correct: 2 },
+            { q: "Varför är det bra att äta lite men ofta?", options: ["Man får en ojämn blodsockernivå.", "Man får en jämn blodsockernivå och tröttheten minskar.", "Man blir hungrigare då."], correct: 1 },
+            { q: "Vad gör tallriksmodellen?", options: ["Visar hur en tallrik tillverkas.", "Visar hur man bör fördela maten på tallriken.", "Visar vilken färg tallriken ska ha."], correct: 1 },
+            { q: "Hur mycket grönsaker och rotfrukter ska en 'Lågenergiförbrukare' ha på tallriken?", options: ["25 %", "33 %", "50 %"], correct: 2 },
+            { q: "Hur mycket kolhydrater ska en 'Högenergiförbrukare' ha på tallriken?", options: ["25 %", "33 %", "50 %"], correct: 2 },
+            { q: "Hur fördelar 'Normalenergiförbrukaren' maten?", options: ["Allt 33 %", "Mest protein", "Mest grönsaker"], correct: 0 },
+            { q: "Vad bidrar ett mellanmål med?", options: ["Gör en trött.", "Får upp humöret och koncentrationen.", "Ger sämre kondition."], correct: 1 },
+            { q: "Vad innebär psykisk hälsa enligt texten?", options: ["Att man har stora muskler.", "Att man har en positiv inställning och ser möjligheter.", "Att man sover hela dagen."], correct: 1 },
+            { q: "Hur kan man visa att man respekterar andra?", options: ["Genom att lyssna aktivt och respektera deras åsikter.", "Genom att avbryta dem.", "Genom att ignorera dem."], correct: 0 },
+            { q: "Vad är ett exempel på mänskliga behov som påverkar psykisk hälsa?", options: ["Att ha en ny mobiltelefon.", "Trygghet i hemmet och kärlek från nära och kära.", "Att spela fotboll varje dag."], correct: 1 },
+            { q: "Hur länge bör man sitta och göra läxor innan man tar en paus?", options: ["45 minuter", "2 timmar", "10 minuter"], correct: 0 },
+            { q: "Varför behöver hjärnan ta paus vid läxläsning?", options: ["För att glömma det man läst.", "För att ta till sig all information och ladda om.", "För att bli tröttare."], correct: 1 },
+            { q: "Vad menas med social hälsa?", options: ["Att träna mycket.", "Att äta bra mat.", "Vänner, relationer, grupptillhörighet och trivsel."], correct: 2 }
+        ];
+
+        // Del 2: 30 Fyll-i-luckan frågor
+        const fillQuestions = [
+            { q: "Hälsa är ett tillstånd av fullständigt fysiskt, psykiskt och _______ välbefinnande.", a: "socialt" },
+            { q: "Genom träning blir man starkare, får bättre _______ och kondition.", a: "rörlighet" },
+            { q: "Skelettet stärks och man förebygger _______.", a: "benskörhet" },
+            { q: "Immunförsvaret stärks om man motionerar _______.", a: "lagom" },
+            { q: "Att cykla, promenera, rasta hunden eller gå i trapporna kallas för _______.", a: "vardagsmotion" },
+            { q: "Motion ger ett bra _______.", a: "självförtroende" },
+            { q: "Konditionen är en _______ så därför är det viktigt att träna regelbundet.", a: "färskvara" },
+            { q: "När man är _______ ska man inte träna för det är farligt för kroppen.", a: "sjuk" },
+            { q: "Kroppen behöver _______ till tio timmars sömn per dygn.", a: "åtta" },
+            { q: "En vuxen person behöver _______ timmars sömn per dygn. (skriv siffror, tex 2-4)", a: "6-8" },
+            { q: "Genom att man vilar och sover ordentligt så bygger kroppen upp _______.", a: "energilagren" },
+            { q: "Kroppen behöver regelbundet _______ för att må bra.", a: "mat" },
+            { q: "De tre _______ är frukost, lunch och middag.", a: "huvudmålen" },
+            { q: "Tränar man på kvällen behöver man även ett _______.", a: "kvällsmål" },
+            { q: "Kroppen behöver få i sig rätt energi i mindre mängder men _______.", a: "ofta" },
+            { q: "Om man äter lite men ofta så har man en jämn blodsockernivå och då minskar _______.", a: "tröttheten" },
+            { q: "Till de tre huvudmålen följer man _______.", a: "tallriksmodellerna" },
+            { q: "Pasta, ris och potatis är exempel på _______.", a: "kolhydrater" },
+            { q: "Kött, fisk och ägg är exempel på _______.", a: "protein" },
+            { q: "Lågenergiförbrukaren ska ha _______ procent grönsaker och rotfrukter (skriv siffror).", a: "50" },
+            { q: "Normalenergiförbrukaren ska ha _______ procent kolhydrater (skriv siffror).", a: "33" },
+            { q: "Högenergiförbrukaren ska ha _______ procent kolhydrater (skriv siffror).", a: "50" },
+            { q: "Med ett mellanmål får du upp humöret och _______.", a: "koncentrationen" },
+            { q: "Psykisk hälsa är att ha en positiv inställning och se _______ istället för hinder.", a: "möjligheter" },
+            { q: "Man kan visa att man ser andra genom att ge dem _______.", a: "beröm" },
+            { q: "Att ha ett hem och trygghet är exempel på mänskliga _______.", a: "behov" },
+            { q: "Det är viktigt att man strukturerar upp _______ så man gör lite varje dag.", a: "läxor" },
+            { q: "Ta fem minuters paus när du har jobbat med läxor i _______ minuter (skriv siffror).", a: "45" },
+            { q: "Alla ska våga diskutera och svara på frågor i klassen utan att någon annan _______.", a: "skrattar" },
+            { q: "Om alla passar bollen till alla i laget ger det ökad trivsel och _______.", a: "delaktighet" }
+        ];
+
+        // Del 3: 20 Para ihop (4 ronder x 5 par)
+        const matchRounds = [
+            // Rond 1: Grunderna & Rörelse
+            [
+                { left: "WHO:s definition", right: "Fysiskt, psykiskt & socialt välbefinnande" },
+                { left: "Benskörhet", right: "Förebyggs när skelettet stärks" },
+                { left: "Vardagsmotion", right: "Gå i trapporna eller rasta hunden" },
+                { left: "Kondition", right: "Är en färskvara" },
+                { left: "Sjukdom", right: "Då ska man absolut inte träna" }
+            ],
+            // Rond 2: Sömn & Mat
+            [
+                { left: "8-10 timmar", right: "Så mycket sömn behöver kroppen" },
+                { left: "6-8 timmar", right: "Så mycket sömn behöver en vuxen" },
+                { left: "Avslappning", right: "Promenad, massage eller lyssna på musik" },
+                { left: "Energilagren", right: "Byggs upp när vi sover" },
+                { left: "Jämn blodsockernivå", right: "Minskar tröttheten" }
+            ],
+            // Rond 3: Tallriksmodellen & Psykisk hälsa
+            [
+                { left: "Lågenergiförbrukaren", right: "50% grönsaker & rotfrukter" },
+                { left: "Normalenergiförbrukaren", right: "33% av varje del" },
+                { left: "Högenergiförbrukaren", right: "50% kolhydrater" },
+                { left: "Mellanmål", right: "Ökar humör och koncentration" },
+                { left: "Psykisk hälsa", right: "Ser möjligheter istället för hinder" }
+            ],
+            // Rond 4: Behov & Social hälsa
+            [
+                { left: "Mänskliga behov", right: "Ett hem, trygghet och kärlek" },
+                { left: "Läxläsning", right: "Jobba 45 min, ta 5 min paus" },
+                { left: "Hjärnan", right: "Behöver paus för att ladda om" },
+                { left: "Social hälsa", right: "Vänner, relationer och trivsel i klassen" },
+                { left: "Delaktighet", right: "När alla får passa bollen i laget" }
+            ]
+        ];
+
+        // --- GAME STATE ---
+        let currentQuestionIndex = 0; 
+        const totalQuestions = 80;
+        let score = 0;
+        let currentPhase = 1; // 1: MC, 2: Fill, 3: Match
+        
+        // Match specific state
+        let currentMatchRound = 0;
+        let leftSelected = null;
+        let rightSelected = null;
+        let matchesFound = 0;
+        let currentMatchPairs = [];
+        let leftElements = [];
+        let rightElements = [];
+
+        // --- CORE FUNCTIONS ---
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            document.getElementById('game-ui').classList.add('fade-in');
+            loadQuestion();
+        }
+
+        function updateProgress() {
+            document.getElementById('question-counter').innerText = `Fråga ${currentQuestionIndex + 1} av ${totalQuestions}`;
+            document.getElementById('score-display').innerText = score;
+            const progressPct = (currentQuestionIndex / totalQuestions) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPct}%`;
+            
+            let phaseText = "";
+            if(currentPhase === 1) phaseText = "Del 1: Flervalsfrågor";
+            if(currentPhase === 2) phaseText = "Del 2: Fyll i luckan";
+            if(currentPhase === 3) phaseText = "Del 3: Para ihop";
+            document.getElementById('phase-title').innerText = phaseText;
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= totalQuestions) {
+                endGame();
+                return;
+            }
+
+            // Determine phase based on index
+            if (currentQuestionIndex < 30) {
+                currentPhase = 1;
+                renderMultipleChoice(mcQuestions[currentQuestionIndex]);
+            } else if (currentQuestionIndex < 60) {
+                currentPhase = 2;
+                renderFillIn(fillQuestions[currentQuestionIndex - 30]);
+            } else {
+                currentPhase = 3;
+                // Since each match round covers 5 questions, we only load a new round when necessary
+                const matchOffset = currentQuestionIndex - 60;
+                if (matchOffset % 5 === 0) {
+                    currentMatchRound = matchOffset / 5;
+                    renderMatching(matchRounds[currentMatchRound]);
+                } else {
+                    // Update progress visually even while inside a match round
+                    updateProgress();
+                }
+            }
+            
+            if(currentPhase !== 3) {
+                updateProgress();
+            }
+            
+            // Reset feedback
+            document.getElementById('feedback-area').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function showFeedback(isCorrect, messageOverride = "") {
+            const area = document.getElementById('feedback-area');
+            const text = document.getElementById('feedback-text');
+            const btn = document.getElementById('next-btn');
+            
+            area.classList.remove('hidden');
+            
+            if (isCorrect) {
+                score++;
+                document.getElementById('score-display').innerText = score;
+                text.innerHTML = `<span class="text-green-600"><i class="fas fa-check-circle mr-2"></i> ${messageOverride || "Rätt svar! Bra jobbat Rafael!"}</span>`;
+                btn.classList.remove('hidden');
+                createConfetti(10);
+            } else {
+                text.innerHTML = `<span class="text-red-500"><i class="fas fa-times-circle mr-2"></i> ${messageOverride || "Tyvärr, det var fel."}</span>`;
+                btn.classList.remove('hidden');
+            }
+            
+            if(currentPhase === 3) {
+                 btn.classList.add('hidden'); // Next button handled specially in matching
+            }
+        }
+
+        function nextQuestion() {
+            if(currentPhase !== 3) {
+                 currentQuestionIndex++;
+            }
+            loadQuestion();
+        }
+
+        // --- RENDER PHASE 1: MULTIPLE CHOICE ---
+        function renderMultipleChoice(qData) {
+            const area = document.getElementById('question-area');
+            let html = `<h3 class="text-2xl font-bold mb-6 text-gray-800">${qData.q}</h3>`;
+            html += `<div class="space-y-3">`;
+            
+            qData.options.forEach((opt, idx) => {
+                html += `
+                    <button onclick="checkMC(${idx}, ${qData.correct}, this)" class="mc-btn w-full text-left p-4 rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition text-lg font-semibold text-gray-700">
+                        ${opt}
+                    </button>
+                `;
+            });
+            html += `</div>`;
+            area.innerHTML = html;
+        }
+
+        function checkMC(selectedIdx, correctIdx, btnEl) {
+            const buttons = document.querySelectorAll('.mc-btn');
+            buttons.forEach(b => b.disabled = true); // Disable all
+            
+            if (selectedIdx === correctIdx) {
+                btnEl.classList.remove('border-gray-200', 'hover:border-blue-400', 'hover:bg-blue-50');
+                btnEl.classList.add('border-green-500', 'bg-green-100', 'text-green-800');
+                showFeedback(true);
+            } else {
+                btnEl.classList.remove('border-gray-200', 'hover:border-blue-400', 'hover:bg-blue-50');
+                btnEl.classList.add('border-red-500', 'bg-red-100', 'text-red-800');
+                
+                // Highlight correct
+                buttons[correctIdx].classList.remove('border-gray-200');
+                buttons[correctIdx].classList.add('border-green-500', 'bg-green-50');
+                
+                showFeedback(false, `Fel. Rätt svar var: ${mcQuestions[currentQuestionIndex].options[correctIdx]}`);
+            }
+        }
+
+        // --- RENDER PHASE 2: FILL IN THE BLANK ---
+        function renderFillIn(qData) {
+            const area = document.getElementById('question-area');
+            const parts = qData.q.split("_______");
+            
+            let html = `
+                <div class="bg-blue-50 p-6 rounded-2xl border-2 border-blue-100">
+                    <h3 class="text-2xl font-bold mb-6 text-gray-800 leading-relaxed">
+                        ${parts[0]}
+                        <input type="text" id="fill-input" autocomplete="off" class="border-b-4 border-blue-400 bg-transparent outline-none text-center px-2 text-blue-700 w-40 focus:border-blue-600 transition" placeholder="skriv här">
+                        ${parts[1]}
+                    </h3>
+                    <div class="flex justify-between items-center mt-8">
+                        <button onclick="checkFill('${qData.a}')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md transition">Svara</button>
+                        <button onclick="showHint('${qData.a}')" class="text-gray-500 hover:text-gray-700 underline text-sm"><i class="fas fa-lightbulb"></i> Behöver du en ledtråd?</button>
+                    </div>
+                </div>
+            `;
+            area.innerHTML = html;
+            
+            // Allow Enter key
+            document.getElementById('fill-input').focus();
+            document.getElementById('fill-input').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') checkFill(qData.a);
+            });
+        }
+
+        function showHint(answer) {
+            const input = document.getElementById('fill-input');
+            input.placeholder = `Börjar på: ${answer.substring(0, 2)}`;
+        }
+
+        function checkFill(correctAnswer) {
+            const inputEl = document.getElementById('fill-input');
+            const userAnswer = inputEl.value.trim().toLowerCase();
+            inputEl.disabled = true;
+            
+            if (userAnswer === correctAnswer.toLowerCase()) {
+                inputEl.classList.add('text-green-600', 'border-green-500');
+                showFeedback(true);
+            } else {
+                inputEl.classList.add('text-red-600', 'border-red-500');
+                inputEl.value = `${inputEl.value} (Fel)`;
+                showFeedback(false, `Rätt ord var: <b>${correctAnswer}</b>`);
+            }
+        }
+
+        // --- RENDER PHASE 3: MATCHING ---
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function renderMatching(pairs) {
+            updateProgress(); // Initial progress update for the round
+            
+            const area = document.getElementById('question-area');
+            matchesFound = 0;
+            leftSelected = null;
+            rightSelected = null;
+            
+            // Prepare arrays
+            currentMatchPairs = pairs;
+            leftElements = pairs.map((p, i) => ({ text: p.left, originalIndex: i }));
+            rightElements = pairs.map((p, i) => ({ text: p.right, originalIndex: i }));
+            
+            // Shuffle
+            leftElements = shuffleArray([...leftElements]);
+            rightElements = shuffleArray([...rightElements]);
+
+            let html = `
+                <div class="text-center mb-4">
+                    <p class="text-gray-600">Klicka på ett ord till vänster och sedan dess förklaring till höger!</p>
+                    <p class="font-bold text-blue-600 mt-2">Hittade par: <span id="match-counter">0</span> / 5</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 md:gap-8 relative">
+            `;
+
+            // Left Column
+            html += `<div class="space-y-3" id="match-col-left">`;
+            leftElements.forEach((item, idx) => {
+                html += `<div id="left-${idx}" data-val="${item.originalIndex}" onclick="handleMatchClick('left', ${idx})" class="match-item border-2 border-gray-300 rounded-lg p-3 md:p-4 text-center font-bold text-gray-700 bg-gray-50 select-none shadow-sm flex items-center justify-center h-20">${item.text}</div>`;
+            });
+            html += `</div>`;
+
+            // Right Column
+            html += `<div class="space-y-3" id="match-col-right">`;
+            rightElements.forEach((item, idx) => {
+                html += `<div id="right-${idx}" data-val="${item.originalIndex}" onclick="handleMatchClick('right', ${idx})" class="match-item border-2 border-gray-300 rounded-lg p-3 md:p-4 text-center text-sm md:text-base font-semibold text-gray-600 bg-gray-50 select-none shadow-sm flex items-center justify-center h-20">${item.text}</div>`;
+            });
+            html += `</div>`;
+            
+            html += `</div>`;
+            
+            // Round completion button (hidden initially)
+            html += `
+                <div id="match-next-container" class="text-center mt-8 hidden fade-in">
+                    <h3 class="text-2xl font-bold text-green-600 mb-4">Grymt jobbat! Rond klar!</h3>
+                    <button onclick="finishMatchRound()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md transition">Nästa <i class="fas fa-arrow-right ml-2"></i></button>
+                </div>
+            `;
+            
+            area.innerHTML = html;
+        }
+
+        function handleMatchClick(side, idx) {
+            const elId = `${side}-${idx}`;
+            const el = document.getElementById(elId);
+            
+            if (el.classList.contains('matched')) return; // Already solved
+
+            // Handle Selection
+            if (side === 'left') {
+                if (leftSelected) document.getElementById(`left-${leftSelected.idx}`).classList.remove('selected');
+                leftSelected = { idx, val: el.getAttribute('data-val'), el };
+                el.classList.add('selected');
+            } else {
+                if (rightSelected) document.getElementById(`right-${rightSelected.idx}`).classList.remove('selected');
+                rightSelected = { idx, val: el.getAttribute('data-val'), el };
+                el.classList.add('selected');
+            }
+
+            // Check match if both selected
+            if (leftSelected && rightSelected) {
+                if (leftSelected.val === rightSelected.val) {
+                    // Correct!
+                    leftSelected.el.classList.remove('selected');
+                    rightSelected.el.classList.remove('selected');
+                    leftSelected.el.classList.add('matched');
+                    rightSelected.el.classList.add('matched');
+                    
+                    createConfetti(5);
+                    
+                    matchesFound++;
+                    document.getElementById('match-counter').innerText = matchesFound;
+                    
+                    // Award point and advance question counter internally
+                    score++;
+                    currentQuestionIndex++; 
+                    document.getElementById('score-display').innerText = score;
+                    updateProgress(); // Update visually for every pair found
+
+                    leftSelected = null;
+                    rightSelected = null;
+
+                    if (matchesFound === 5) {
+                        document.getElementById('match-next-container').classList.remove('hidden');
+                    }
+                } else {
+                    // Incorrect
+                    const l = leftSelected.el;
+                    const r = rightSelected.el;
+                    l.classList.add('error');
+                    r.classList.add('error');
+                    
+                    setTimeout(() => {
+                        l.classList.remove('error', 'selected');
+                        r.classList.remove('error', 'selected');
+                    }, 400);
+
+                    leftSelected = null;
+                    rightSelected = null;
+                }
+            }
+        }
+        
+        function finishMatchRound() {
+            // currentQuestionIndex was incremented during matching. Load next block.
+            loadQuestion();
+        }
+
+        // --- END GAME ---
+        function endGame() {
+            document.getElementById('game-ui').classList.add('hidden');
+            const endScreen = document.getElementById('end-screen');
+            endScreen.classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = score;
+            
+            let msg = "";
+            if (score === 80) msg = "Helt otroligt! Du hade alla rätt. Du är en riktig hälsoexpert!";
+            else if (score >= 60) msg = "Wow, grymt bra resultat! Du har stenkoll på kroppen och knoppen.";
+            else if (score >= 40) msg = "Bra kämpat! Du har lärt dig mycket viktigt om hälsa.";
+            else msg = "Bra försök! Läs gärna igenom texten en gång till och spela igen för att slå ditt rekord!";
+            
+            document.getElementById('final-message').innerText = msg;
+            createConfetti(100);
+        }
+
+        // --- UTILS ---
+        function createConfetti(amount) {
+            for (let i = 0; i < amount; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // Random position, color, and animation duration
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = -10 + 'px';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                
+                document.body.appendChild(confetti);
+                
+                // Cleanup
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+    </script>
+</body>
+</html>
+
