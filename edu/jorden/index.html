@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugg-Quiz: Jordens Resurser</title>
+    <!-- Tailwind CSS för en modern, responsiv design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Outfit:wght@100..900&display=swap');
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+        .fun-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 min-h-screen pb-12">
+
+    <!-- TOP BAR -->
+    <header class="bg-white/80 backdrop-blur shadow-sm sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🌍</span>
+                <div>
+                    <h1 class="text-xl font-bold text-emerald-800 fun-font">Jordens Resurser - SuperQuiz</h1>
+                    <p class="text-xs text-emerald-600 font-medium">Lär dig inför provet på ett roligt sätt!</p>
+                </div>
+            </div>
+            <!-- Ljudkontroll och Återställning -->
+            <div class="flex items-center gap-2">
+                <button id="muteBtn" onclick="toggleMute()" class="px-3 py-1.5 rounded-full bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-sm font-semibold transition flex items-center gap-1.5">
+                    <span id="muteIcon">🔊</span> <span class="hidden sm:inline">Ljud på</span>
+                </button>
+                <button onclick="resetAll()" class="px-3 py-1.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-700 text-sm font-semibold transition">
+                    🔄 Nollställ allt
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 mt-6">
+
+        <!-- ÖVERSIKT/FRAMSTEGSKARTA -->
+        <section class="bg-white rounded-3xl p-6 shadow-xl border border-emerald-100/50 mb-8">
+            <h2 class="text-lg font-bold text-emerald-900 mb-4 flex items-center gap-2 fun-font">
+                <span>🏆</span> Din framstegskarta
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                <!-- Modulkort -->
+                <button onclick="switchModule(1)" id="map-mod-1" class="p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-left transition hover:scale-105">
+                    <div class="text-xs font-bold text-emerald-700">Del 1: Duellen</div>
+                    <div class="text-lg font-bold text-emerald-950 mt-1" id="score-text-1">0 / 10</div>
+                    <div class="w-full bg-emerald-200 h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all" id="bar-1" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <button onclick="switchModule(2)" id="map-mod-2" class="p-3 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:scale-105">
+                    <div class="text-xs font-bold text-slate-500">Del 2: Sant/Falskt</div>
+                    <div class="text-lg font-bold text-slate-800 mt-1" id="score-text-2">0 / 10</div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all" id="bar-2" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <button onclick="switchModule(3)" id="map-mod-3" class="p-3 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:scale-105">
+                    <div class="text-xs font-bold text-slate-500">Del 3: Sorteraren</div>
+                    <div class="text-lg font-bold text-slate-800 mt-1" id="score-text-3">0 / 10</div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all" id="bar-3" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <button onclick="switchModule(4)" id="map-mod-4" class="p-3 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:scale-105">
+                    <div class="text-xs font-bold text-slate-500">Del 4: Kopplingen</div>
+                    <div class="text-lg font-bold text-slate-800 mt-1" id="score-text-4">0 / 10</div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all" id="bar-4" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <button onclick="switchModule(5)" id="map-mod-5" class="p-3 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:scale-105">
+                    <div class="text-xs font-bold text-slate-500">Del 5: Luckorna</div>
+                    <div class="text-lg font-bold text-slate-800 mt-1" id="score-text-5">0 / 10</div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all" id="bar-5" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <button onclick="switchModule(6)" id="map-mod-6" class="p-3 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:scale-105">
+                    <div class="text-xs font-bold text-slate-500">Del 6: Detektiven</div>
+                    <div class="text-lg font-bold text-slate-800 mt-1" id="score-text-6">0 / 10</div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full mt-2 overflow-hidden">
+                        <div class="bg-emerald-500 h-full transition-all" id="bar-6" style="width: 0%"></div>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+        <!-- AKTIV MODUL-CONTAINER -->
+        <section class="bg-white rounded-3xl p-6 md:p-10 shadow-xl border border-emerald-100/50 min-h-[450px] relative">
+            
+            <!-- DEL 1: FLERVALS-DUELLEN -->
+            <div id="module-1" class="module-view">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">Flervalsfrågor</span>
+                    <span class="text-sm font-semibold text-slate-500" id="m1-progress">Fråga 1 av 10</span>
+                </div>
+                <h3 class="text-2xl font-bold text-indigo-950 mb-6 fun-font" id="m1-question">Laddar...</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="m1-options">
+                    <!-- Alternativ ritas ut här -->
+                </div>
+                <div id="m1-feedback" class="mt-6 p-4 rounded-2xl border hidden transition-all"></div>
+                <div class="mt-8 flex justify-end">
+                    <button id="m1-next-btn" onclick="nextM1Question()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold transition shadow-lg hidden">Nästa fråga ➡️</button>
+                </div>
+            </div>
+
+            <!-- DEL 2: SANT ELLER FALSKT -->
+            <div id="module-2" class="module-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="px-4 py-1.5 rounded-full bg-amber-50 text-amber-700 text-xs font-bold uppercase tracking-wider">Sant eller Falskt</span>
+                    <span class="text-sm font-semibold text-slate-500" id="m2-progress">Fråga 1 av 10</span>
+                </div>
+                <div class="bg-amber-50 rounded-2xl p-6 border border-amber-100 mb-6 text-center">
+                    <h3 class="text-xl md:text-2xl font-bold text-amber-950 fun-font" id="m2-question">Laddar...</h3>
+                </div>
+                <div class="flex gap-4 justify-center" id="m2-buttons-container">
+                    <button onclick="checkM2(true)" class="px-10 py-5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-bold text-lg transition shadow-lg transform active:scale-95">✅ SANT</button>
+                    <button onclick="checkM2(false)" class="px-10 py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-lg transition shadow-lg transform active:scale-95">❌ FALSKT</button>
+                </div>
+                <div id="m2-feedback" class="mt-6 p-4 rounded-2xl border hidden transition-all"></div>
+                <div class="mt-8 flex justify-end">
+                    <button id="m2-next-btn" onclick="nextM2Question()" class="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-bold transition shadow-lg hidden">Nästa fråga ➡️</button>
+                </div>
+            </div>
+
+            <!-- DEL 3: RESURS-SORTERAREN -->
+            <div id="module-3" class="module-view hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider">Förnybart eller inte?</span>
+                    <span class="text-sm font-semibold text-slate-500" id="m3-progress">Resurs 1 av 10</span>
+                </div>
+                <p class="text-slate-600 text-sm mb-6">Klicka på rätt hink för att sortera naturresursen!</p>
+                
+                <div class="flex flex-col items-center justify-center py-6">
+                    <div class="bg-emerald-100 text-emerald-950 text-3xl font-bold px-8 py-6 rounded-3xl border-2 border-emerald-300 shadow-inner mb-8 animate-bounce fun-font" id="m3-item">
+                        Laddar...
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-xl">
+                        <!-- Hink 1: Förnybar -->
+                        <button onclick="checkM3('renew')" class="flex flex-col items-center p-6 bg-gradient-to-b from-teal-50 to-teal-100 hover:from-teal-100 hover:to-teal-200 border-2 border-teal-300 rounded-3xl transition shadow-md active:scale-95">
+                            <span class="text-4xl mb-2">☀️💧🌀</span>
+                            <span class="text-lg font-bold text-teal-900 fun-font">Förnybar</span>
+                            <span class="text-xs text-teal-700">Kan aldrig ta slut</span>
+                        </button>
+                        <!-- Hink 2: Ej förnybar -->
+                        <button onclick="checkM3('non')" class="flex flex-col items-center p-6 bg-gradient-to-b from-stone-50 to-stone-100 hover:from-stone-100 hover:to-stone-200 border-2 border-stone-300 rounded-3xl transition shadow-md active:scale-95">
+                            <span class="text-4xl mb-2">🛢️🪵⛏️</span>
+                            <span class="text-lg font-bold text-stone-900 fun-font">Ej förnybar</span>
+                            <span class="text-xs text-stone-700">Kan ta slut / Tar miljoner år att bildas</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="m3-feedback" class="mt-6 p-4 rounded-2xl border hidden transition-all"></div>
+                <div class="mt-4 flex justify-end">
+                    <button id="m3-next-btn" onclick="nextM3Question()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold transition shadow-lg hidden">Nästa resurs ➡️</button>
+                </div>
+            </div>
+
+            <!-- DEL 4: BEGREPPS-KOPPLINGEN -->
+            <div id="module-4" class="module-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="px-4 py-1.5 rounded-full bg-cyan-50 text-cyan-700 text-xs font-bold uppercase tracking-wider">Koppla begrepp</span>
+                    <span class="text-sm font-semibold text-slate-500">Para ihop alla 10 par!</span>
+                </div>
+                <p class="text-slate-600 text-sm mb-6">Hitta rätt förklaring till varje viktigt begrepp från kapitlet. När alla är rätt får du full poäng!</p>
+                
+                <div class="space-y-4" id="m4-matching-container">
+                    <!-- Ritas upp av JS -->
+                </div>
+                
+                <div class="mt-8 p-4 rounded-2xl border border-cyan-100 bg-cyan-50/50 flex flex-wrap justify-between items-center gap-4">
+                    <div id="m4-feedback" class="font-bold text-cyan-900 text-sm">Inte kontrollerat än. Välj alternativ ovan!</div>
+                    <button onclick="checkM4()" class="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white rounded-2xl font-bold transition shadow-lg">Rätta mina svar ✅</button>
+                </div>
+            </div>
+
+            <!-- DEL 5: KRETSLOPPS-LUCKORNA -->
+            <div id="module-5" class="module-view hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider">Fyll i luckorna</span>
+                    <span class="text-sm font-semibold text-slate-500">10 tomma luckor</span>
+                </div>
+                <p class="text-slate-600 text-sm mb-6">Läs igenom meningarna och välj rätt ord i rullistorna för att komplettera texten om naturens kretslopp och resurser.</p>
+                
+                <div class="bg-blue-50/50 rounded-3xl p-6 md:p-8 border border-blue-100 text-slate-800 leading-relaxed space-y-6 md:text-lg" id="m5-container">
+                    <!-- Text ritas upp via JS -->
+                </div>
+                
+                <div class="mt-8 p-4 rounded-2xl border border-blue-100 bg-blue-50/50 flex flex-wrap justify-between items-center gap-4">
+                    <div id="m5-feedback" class="font-bold text-blue-900 text-sm">Välj ord i alla luckor och klicka på rätta!</div>
+                    <button onclick="checkM5()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition shadow-lg">Rätta luckorna ✅</button>
+                </div>
+            </div>
+
+            <!-- DEL 6: MILJÖ-DETEKTIVEN -->
+            <div id="module-6" class="module-view hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="px-4 py-1.5 rounded-full bg-teal-50 text-teal-700 text-xs font-bold uppercase tracking-wider">Hållbara eller ohållbara beteenden</span>
+                    <span class="text-sm font-semibold text-slate-500" id="m6-progress">Beteende 1 av 10</span>
+                </div>
+                <p class="text-slate-600 text-sm mb-6">Läs beteendet och avgör om det leder till en hållbar utveckling eller om det är dåligt för miljön och ohållbart.</p>
+                
+                <div class="flex flex-col items-center justify-center py-6">
+                    <div class="bg-teal-50 text-teal-950 p-6 md:p-8 rounded-3xl border-2 border-teal-200 shadow-sm mb-8 text-center max-w-xl font-semibold text-lg" id="m6-item">
+                        Laddar...
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-xl">
+                        <!-- Knapp 1: Hållbart -->
+                        <button onclick="checkM6('sustainable')" class="flex flex-col items-center p-6 bg-gradient-to-b from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 border-2 border-emerald-300 rounded-3xl transition shadow-md active:scale-95">
+                            <span class="text-4xl mb-2">🟢🌱</span>
+                            <span class="text-lg font-bold text-emerald-900 fun-font">Hållbart / Klimatsmart</span>
+                            <span class="text-xs text-emerald-700">Räddar resurser för framtiden</span>
+                        </button>
+                        <!-- Knapp 2: Ohållbart -->
+                        <button onclick="checkM6('unsustainable')" class="flex flex-col items-center p-6 bg-gradient-to-b from-rose-50 to-rose-100 hover:from-rose-100 hover:to-rose-200 border-2 border-rose-300 rounded-3xl transition shadow-md active:scale-95">
+                            <span class="text-4xl mb-2">🔴⚠️</span>
+                            <span class="text-lg font-bold text-rose-900 fun-font">Ohållbart / Slösaktigt</span>
+                            <span class="text-xs text-rose-700">Sliter på jordens resurser</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="m6-feedback" class="mt-6 p-4 rounded-2xl border hidden transition-all"></div>
+                <div class="mt-4 flex justify-end">
+                    <button id="m6-next-btn" onclick="nextM6Question()" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-bold transition shadow-lg hidden">Nästa beteende ➡️</button>
+                </div>
+            </div>
+
+            <!-- GRATTIS-SKÄRM (Vises när alla moduler är klara med högt poäng) -->
+            <div id="congrats-overlay" class="absolute inset-0 bg-emerald-900/95 rounded-3xl z-40 flex flex-col items-center justify-center text-center p-8 text-white hidden">
+                <span class="text-7xl mb-4 animate-bounce">👑🏆🌟</span>
+                <h3 class="text-3xl md:text-4xl font-bold fun-font text-yellow-300 mb-2">Helt enastående!</h3>
+                <p class="text-lg max-w-md mb-6 text-emerald-100">Du har gått igenom samtliga 60 frågor och lärt dig massor om jordens resurser, kretslopp och hur vi tar hand om vår planet!</p>
+                <div class="bg-white/10 p-4 rounded-2xl mb-8">
+                    <span class="text-sm uppercase font-bold text-emerald-300 block mb-1">Totalt Resultat</span>
+                    <span class="text-3xl font-black" id="congrats-score">60 / 60 Poäng</span>
+                </div>
+                <button onclick="resetAll()" class="px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-black rounded-2xl text-lg transition shadow-xl hover:scale-105 active:scale-95">
+                    Spela igen 🔄
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // GLOBALA TILLSTÅND
+        let activeModule = 1;
+        let isMuted = false;
+        
+        // POÄNG OCH PROGRESS FÖR RESP_MODULER
+        const scores = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+        const totalQuestions = 10;
+
+        // --- LJUD-FEEDBACK VIA WEB AUDIO API ---
+        function playSound(type) {
+            if (isMuted) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                if (type === 'correct') {
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15); // A5
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.frequency.setValueAtTime(220, ctx.currentTime); // A3
+                    osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.2); // A2
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'fanfare') {
+                    const notes = [261.63, 329.63, 392.00, 523.25];
+                    notes.forEach((freq, idx) => {
+                        const oscN = ctx.createOscillator();
+                        const gainN = ctx.createGain();
+                        oscN.connect(gainN);
+                        gainN.connect(ctx.destination);
+                        oscN.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+                        gainN.gain.setValueAtTime(0.1, ctx.currentTime + idx * 0.1);
+                        gainN.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.1 + 0.2);
+                        oscN.start(ctx.currentTime + idx * 0.1);
+                        oscN.stop(ctx.currentTime + idx * 0.1 + 0.2);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not supported or blocked by browser.", e);
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('muteIcon').innerText = isMuted ? '🔇' : '🔊';
+            document.getElementById('muteBtn').querySelector('span:not(#muteIcon)').innerText = isMuted ? 'Ljud av' : 'Ljud på';
+        }
+
+        // --- DATA FÖR DE OLIKA DELARNA ---
+        
+        // DEL 1 DATA (Flervals)
+        const m1Data = [
+            {
+                q: "Vad är definitionen av en 'naturresurs'?",
+                options: [
+                    "Allt som tillverkas i en fabrik",
+                    "Det som människor kan använda och ha nytta av i naturen",
+                    "Saker som bara finns djupt nere i berggrunden",
+                    "Djur som inte går att tämja"
+                ],
+                correct: 1,
+                explanation: "Rätt! Naturresurser (eller naturtillgångar) är sådant vi hämtar direkt från naturen för att täcka våra behov."
+            },
+            {
+                q: "Vilka tre resurser räknas som typiska förnybara resurser?",
+                options: [
+                    "Kol, olja och naturgas",
+                    "Guld, järn och koppar",
+                    "Sol, vind och strömmande vatten",
+                    "Plast, papper och glas"
+                ],
+                correct: 2,
+                explanation: "Snyggt! Sol, vind och vatten tar inte slut och fylls ständigt på genom naturens egna processer."
+            },
+            {
+                q: "Hur stor andel av allt vatten på jorden är sötvatten?",
+                options: [
+                    "Bara ungefär 3 %",
+                    "Ungefär 50 %",
+                    "Cirka 75 %",
+                    "Nästan 97 %"
+                ],
+                correct: 0,
+                explanation: "Helt rätt! Endast cirka 3 % är sötvatten, och resten (97 %) är saltvatten i haven."
+            },
+            {
+                q: "Var finns det mesta av jordens sötvatten bundet?",
+                options: [
+                    "I atmosfären som moln",
+                    "I stora sjöar och floder",
+                    "I grundvattnet djupt i jorden",
+                    "I glaciärer och stora isar"
+                ],
+                correct: 3,
+                explanation: "Rätt! Det absolut mesta av sötvattnet är fastlåst som is vid polerna och i glaciärer."
+            },
+            {
+                q: "Vad innebär begreppet 'virtuellt vatten'?",
+                options: [
+                    "Vatten som man bara ser i datorspel",
+                    "Vattenånga i atmosfären",
+                    "Det dolda vatten som krävs för att odla eller tillverka en produkt",
+                    "Vatten som är kemiskt renat i ett laboratorium"
+                ],
+                correct: 2,
+                explanation: "Ja! Virtuellt vatten är den dolda mängd vatten som har förbrukats under hela tillverkningskedjan för en vara."
+            },
+            {
+                q: "Hur mycket virtuellt vatten beräknas gå åt för att producera ett enda par jeans?",
+                options: [
+                    "Cirka 10 liter",
+                    "Cirka 100 liter",
+                    "Cirka 1 100 liter",
+                    "Cirka 11 000 liter"
+                ],
+                correct: 3,
+                explanation: "Imponerande! Det krävs otroliga 11 000 liter vatten för att odla bomull, färga och tillverka ett par jeans."
+            },
+            {
+                q: "Vad är 'malm'?",
+                options: [
+                    "En speciell sorts ren järnplåt",
+                    "En bergart som innehåller tillräckligt mycket metall för att vara lönsam att bryta",
+                    "Ett fossilt bränsle som liknar kol",
+                    "Den aska som bildas när man eldar trä"
+                ],
+                correct: 1,
+                explanation: "Korrekt! Malm är ekonomiskt värdefull sten som vi kan utvinna metaller ur."
+            },
+            {
+                q: "Varför minskar skogsarealen i delar av Sydamerika och Afrika?",
+                options: [
+                    "Det regnar för mycket så träden drunknar",
+                    "Skogen huggs ner för att ge plats åt jordbruk, betesmark och gruvor",
+                    "Träden har blivit för gamla och dött av sig själva",
+                    "Skogarna brinner upp på grund av vulkanutbrott"
+                ],
+                correct: 1,
+                explanation: "Rätt! Avskogning (skövling) sker i dessa områden för att skapa åkermark och betesmark för exempelvis köttproduktion."
+            },
+            {
+                q: "Vilket av följande är ett fossilt bränsle?",
+                options: [
+                    "Träkol",
+                    "Råolja",
+                    "Uran",
+                    "Vätgas"
+                ],
+                correct: 1,
+                explanation: "Rätt! Råolja, tillsammans med stenkol och naturgas, är fossila bränslen som bildats av forntida organismer under miljoner år."
+            },
+            {
+                q: "Vilka är de tre pelarna inom 'Hållbar utveckling'?",
+                options: [
+                    "Teknik, rymdforskning och industri",
+                    "Skola, sjukvård och infrastruktur",
+                    "Ekologisk, social och ekonomisk hållbarhet",
+                    "Klimat, väder och vind"
+                ],
+                correct: 2,
+                explanation: "Klockrent! För att en utveckling ska vara hållbar måste miljön (ekologin), människors välbefinnande (socialt) och ekonomin fungera i balans."
+            }
+        ];
+
+        // DEL 2 DATA (Sant/Falskt)
+        const m2Data = [
+            {
+                q: "Skogen i Europa ökar i yta eftersom vi planterar mer än vad vi avverkar.",
+                correct: true,
+                explanation: "Sant! I Europa har vi lagar som säger att ny skog måste planteras efter avverkning, vilket gör att skogsarealen faktiskt växer."
+            },
+            {
+                q: "Köttproduktion kräver lika lite markyta som att odla vegetabilisk mat.",
+                correct: false,
+                explanation: "Falskt! Köttproduktion kräver minst 10 gånger så mycket mark eftersom djuren måste äta enorma mängder växter under sitt liv."
+            },
+            {
+                q: "Det moderna storskaliga fisket kan leda till 'överfiske', vilket betyder att fisken tar slut i vissa havområden.",
+                correct: true,
+                explanation: "Sant! När vi fiskar med jättelika trålare hinner fisken inte föröka sig i samma takt som de fångas in."
+            },
+            {
+                q: "Plastskräp som hamnar i haven bryts snabbt ner kemiskt och försvinner helt inom några månader.",
+                correct: false,
+                explanation: "Falskt! Plast bryts ner extremt långsamt. Istället sönderdelas den till mikroplast som skadar djur som misstar det för mat."
+            },
+            {
+                q: "Skogen hjälper till att bromsa klimatförändringarna genom att ta upp koldioxid från luften.",
+                correct: true,
+                explanation: "Sant! Träden fungerar som koldioxid sänkor genom fotosyntesen där de binder kol och frigör syre."
+            },
+            {
+                q: "När vi eldar fossila bränslen frigörs koldioxid som ökar växthuseffekten och värmer upp jorden.",
+                correct: true,
+                explanation: "Sant! Kolet som legat lagrat i berggrunden i miljoner år släpps ut i atmosfären och förstärker växthuseffekten."
+            },
+            {
+                q: "Cirkulär ekonomi bygger på att vi ska slänga allt avfall på soptippen så att det döljs.",
+                correct: false,
+                explanation: "Falskt! Cirkulär ekonomi handlar om att återanvända och återvinna allt material så att inget avfall överhuvudtaget uppstår."
+            },
+            {
+                q: "Sötvatten är en resurs som är helt jämnt fördelad över hela jorden så att alla länder har lika mycket.",
+                correct: false,
+                explanation: "Falskt! Vattenresurserna är mycket ojämnt fördelade. Vissa länder lider av extrem vattenbrist medan andra har gott om det."
+            },
+            {
+                q: "Fisket är en förnybar resurs om vi bara fiskar i en takt som gör att bestånden hinner återhämta sig.",
+                correct: true,
+                explanation: "Sant! Biologiska resurser som fisk och skog kan förnyas, men bara om vi skördar/fiskar dem på ett hållbart sätt."
+            },
+            {
+                q: "Metaller i berggrunden är en helt förnybar resurs som skapas på nytt varje år.",
+                correct: false,
+                explanation: "Falskt! Metaller och mineraler bildas under miljontals år och räknas därför som ej förnybara resurser."
+            }
+        ];
+
+        // DEL 3 DATA (Klassificering)
+        const m3Data = [
+            { name: "Solljus / Solenergi", type: "renew", exp: "Förnybar! Solens strålar flödar ständigt till jorden och tar aldrig slut." },
+            { name: "Stenkol", type: "non", exp: "Ej förnybar! Det kol vi bryter i gruvor tog hundratals miljoner år att bildas." },
+            { name: "Vindkraft", type: "renew", exp: "Förnybar! Vindarna drivs av solens uppvärmning och är outtömliga." },
+            { name: "Råolja", type: "non", exp: "Ej förnybar! Olja är ett fossilt bränsle som snabbt tar slut om vi pumpar upp det." },
+            { name: "Vattenkraft (Strömmande vatten)", type: "renew", exp: "Förnybar! Ingår i det eviga vattnets kretslopp." },
+            { name: "Järnmalm", type: "non", exp: "Ej förnybar! Metallerna i berggrunden nybildas inte under mänsklig tid." },
+            { name: "Naturgas", type: "non", exp: "Ej förnybar! Ett fossilt gasbränsle som är lagrat djupt under marken." },
+            { name: "Trä och skogsråvara", type: "renew", exp: "Förnybar! Så länge vi planterar nya träd växer ny skog upp." },
+            { name: "Guld", type: "non", exp: "Ej förnybar! Precis som andra ädelmetaller finns det en begränsad mängd i jordskorpan." },
+            { name: "Geotermisk energi (Bergvärme)", type: "renew", exp: "Förnybar! Värmen inuti jordens inre är praktiskt taget oändlig." }
+        ];
+
+        // DEL 4 DATA (Begreppskoppling)
+        const m4Data = [
+            { word: "Naturresurs", definition: "Det som finns i naturen och som vi människor har nytta av." },
+            { word: "Cirkulär ekonomi", definition: "Ett ekonomiskt kretslopp där allt återvinns och inget blir skräp." },
+            { word: "Fossilt bränsle", definition: "Energikällor (t.ex. olja, kol) som bildats av gamla växter och djur under miljoner år." },
+            { word: "Kondensera", definition: "När en gas (t.ex. vattenånga) kyls ner och blir till vätska igen." },
+            { word: "Avdunsta", definition: "När flytande vatten värms upp och blir till osynlig ånga/gas." },
+            { word: "Överfiske", definition: "När man fångar så mycket fisk att bestånden riskerar att kollapsa." },
+            { word: "Glaciär", definition: "Ett jättelikt täcke av tjock is som ligger kvar året runt på land." },
+            { word: "Mikroplast", definition: "Små, knappt synliga plastpartiklar som skadar djurlivet i haven." },
+            { word: "Koldioxid", definition: "En växthusgas som träden andas in och som bildas när vi eldar kol och olja." },
+            { word: "Ekologisk hållbarhet", definition: "Att långsiktigt skydda naturens ekosystem, vatten, luft och mark." }
+        ];
+
+        // DEL 5 DATA (Lucktext)
+        const m5Data = {
+            // Vi sparar textstycket med placeholders {0}, {1} etc.
+            text: "Jorden ger oss allt vi behöver. De resurser som ständigt fylls på och aldrig tar slut kallas för <span class='inline-block'>{0}</span> resurser, till exempel sol och vind. Motsatsen är <span class='inline-block'>{1}</span> resurser, som kol och metaller. Sötvatten är livsviktigt, men endast <span class='inline-block'>{2}</span> av jordens vatten är sötvatten. Naturen renar och flyttar vatten genom vattnets <span class='inline-block'>{3}</span>. När solen värmer upp havet <span class='inline-block'>{4}</span> vattnet till ånga. Högt uppe i luften kyls ångan ner och <span class='inline-block'>{5}</span> till små vattendroppar som bildar moln. Träden i skogen är fantastiska eftersom de tar upp <span class='inline-block'>{6}</span> och bromsar den globala uppvärmningen. Men skogen hotas i vissa delar av världen av intensiv <span class='inline-block'>{7}</span>. I haven ställer storskaligt fiske till problem genom <span class='inline-block'>{8}</span>. För att rädda jorden måste vi gå över till en <span class='inline-block'>{9}</span> ekonomi där vi återvinner allt material istället för att slänga det.",
+            // Svarsalternativ för varje index
+            dropdowns: [
+                { correct: "förnybara", options: ["förnybara", "ej förnybara", "konstgjorda"] },
+                { correct: "ej förnybara", options: ["förnybara", "ej förnybara", "magiska"] },
+                { correct: "3 procent", options: ["3 procent", "50 procent", "97 procent"] },
+                { correct: "kretslopp", options: ["kretslopp", "avlopp", "undergång"] },
+                { correct: "avdunstar", options: ["avdunstar", "fryser", "kondenserar"] },
+                { correct: "kondenserar", options: ["avdunstar", "brinner", "kondenserar"] },
+                { correct: "koldioxid", options: ["syre", "koldioxid", "kväve"] },
+                { correct: "avverkning", options: ["avverkning", "vattning", "gödslig"] },
+                { correct: "överfiske", options: ["överfiske", "badvatten", "algblomning"] },
+                { correct: "cirkulär", options: ["linjär", "snabb", "cirkulär"] }
+            ]
+        };
+
+        // DEL 6 DATA (Miljö-detektiven)
+        const m6Data = [
+            { item: "Lämna in gamla trasiga mobiltelefoner och batterier på återvinningscentralen.", type: "sustainable", exp: "Hållbart! Då kan de sällsynta och värdefulla metallerna återvinnas och användas på nytt." },
+            { item: "Äta mycket nötkött till frukost, lunch och middag varje dag.", type: "unsustainable", exp: "Ohållbart! Köttproduktion kräver extremt mycket mark och vatten jämför med vegetabilisk mat." },
+            { item: "Att slänga plastpåsar och engångsmuggar i dikeskanten under skogspromenaden.", type: "unsustainable", exp: "Ohållbart! Plasten hamnar till slut i vattendrag och hav och skadar fåglar och fiskar under hundratals år." },
+            { item: "Låta varmvattnet rinna på max under hela tiden du borstar tänderna.", type: "unsustainable", exp: "Ohållbart! Det slösar både på vårt rena dricksvatten och på energin som krävs för att värma upp det." },
+            { item: "Montera solpaneler på husets tak för att producera egen el.", type: "sustainable", exp: "Hållbart! Solenergi är en helt förnybar energikälla som inte släpper ut växthusgaser under drift." },
+            { item: "Köpa nya kläder och prylar så fort man tröttnar på de gamla, och slänga det gamla i hushållssoporna.", type: "unsustainable", exp: "Ohållbart! Det kallas linjär ekonomi. Det sliter på jordens resurser och skapar enorma sopberg." },
+            { item: "Plantera nya trädplanta för varje träd som huggs ner i skogen.", type: "sustainable", exp: "Hållbart! Det gör att skogen kan förnyas och fortsätta binda koldioxid samt ge oss virke i framtiden." },
+            { item: "Sortera matrester i en egen påse så att det kan rötas och bli till biogas till stadsbussar.", type: "sustainable", exp: "Hållbart! Det är ett utmärkt exempel på cirkulärt tänkande där avfall blir till ny grön energi." },
+            { item: "Cykla eller gå till skolan istället för att bli skjutsad i en bensin- eller dieselbil.", type: "sustainable", exp: "Hållbart! Det minskar förbränningen av fossila bränslen och sparar på jordens atmosfär." },
+            { item: "Handla kläder i second-hand-butiker eller laga hål i sina favoritjeans istället för att köpa nya.", type: "sustainable", exp: "Hållbart! Det minskar efterfrågan på nyproduktion, vilket sparar enorma mängder virtuellt vatten." }
+        ];
+
+
+        // --- SPELLOGIK FÖR VARJE INDIVIDUELL MODUL ---
+
+        // INDIVIDUELLA INDEX
+        let m1Idx = 0;
+        let m2Idx = 0;
+        let m3Idx = 0;
+        let m6Idx = 0;
+
+        // Initiera vid start
+        window.onload = function() {
+            switchModule(1);
+            updateGlobalProgressMap();
+        };
+
+        // Byt flik / modul
+        function switchModule(modNum) {
+            activeModule = modNum;
+            
+            // Dölj alla moduler
+            document.querySelectorAll('.module-view').forEach(view => view.classList.add('hidden'));
+            
+            // Visa vald modul
+            document.getElementById(`module-${modNum}`).classList.remove('hidden');
+
+            // Uppdatera visuell stil på kartan
+            for (let i = 1; i <= 6; i++) {
+                let card = document.getElementById(`map-mod-${i}`);
+                if (i === modNum) {
+                    card.className = "p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-left transition hover:scale-105 shadow-md";
+                } else {
+                    card.className = "p-3 rounded-2xl border-2 border-slate-200 bg-white text-left transition hover:scale-105";
+                }
+            }
+
+            // Starta eller ladda om den specifika modulens gränssnitt
+            if (modNum === 1) renderM1();
+            if (modNum === 2) renderM2();
+            if (modNum === 3) renderM3();
+            if (modNum === 4) renderM4();
+            if (modNum === 5) renderM5();
+            if (modNum === 6) renderM6();
+        }
+
+        // Uppdatera översiktskartan högst upp
+        function updateGlobalProgressMap() {
+            let totalDone = 0;
+            for (let i = 1; i <= 6; i++) {
+                let scoreText = document.getElementById(`score-text-${i}`);
+                let progressBar = document.getElementById(`bar-${i}`);
+                
+                scoreText.innerText = `${scores[i]} / 10`;
+                let percentage = (scores[i] / totalQuestions) * 100;
+                progressBar.style.width = `${percentage}%`;
+
+                if (scores[i] === 10) {
+                    scoreText.innerHTML = `${scores[i]} / 10 ⭐`;
+                    totalDone++;
+                } else if (scores[i] > 0) {
+                    totalDone++;
+                }
+            }
+
+            // Om alla är helt klara med full pott!
+            let sumScores = Object.values(scores).reduce((a, b) => a + b, 0);
+            if (sumScores === 60) {
+                document.getElementById('congrats-score').innerText = `${sumScores} / 60 Poäng`;
+                document.getElementById('congrats-overlay').classList.remove('hidden');
+                playSound('fanfare');
+            }
+        }
+
+        // --- MODUL 1 KOD (Flervals) ---
+        function renderM1() {
+            let data = m1Data[m1Idx];
+            document.getElementById('m1-progress').innerText = `Fråga ${m1Idx + 1} av 10`;
+            document.getElementById('m1-question').innerText = data.q;
+            
+            let optionsDiv = document.getElementById('m1-options');
+            optionsDiv.innerHTML = '';
+            
+            data.options.forEach((opt, idx) => {
+                let btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 font-medium text-slate-800 transition active:scale-[0.99]";
+                btn.innerText = opt;
+                btn.onclick = () => selectM1Option(idx, btn);
+                optionsDiv.appendChild(btn);
+            });
+
+            document.getElementById('m1-feedback').classList.add('hidden');
+            document.getElementById('m1-next-btn').classList.add('hidden');
+        }
+
+        function selectM1Option(selectedIdx, clickedBtn) {
+            let data = m1Data[m1Idx];
+            let optionsDiv = document.getElementById('m1-options');
+            let buttons = optionsDiv.getElementsByTagName('button');
+
+            // Avaktivera alla knappar
+            for (let btn of buttons) {
+                btn.disabled = true;
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-200 bg-slate-100 text-slate-400 font-medium cursor-not-allowed";
+            }
+
+            let fb = document.getElementById('m1-feedback');
+            fb.classList.remove('hidden');
+
+            if (selectedIdx === data.correct) {
+                clickedBtn.className = "w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold";
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-900 text-sm";
+                fb.innerHTML = `<strong>Rätt svar! 🎉</strong><br>${data.explanation}`;
+                scores[1] = Math.max(scores[1], m1Idx + 1);
+                playSound('correct');
+            } else {
+                clickedBtn.className = "w-full text-left p-4 rounded-2xl border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold";
+                // Markera även det rätta svaret för tydlighet
+                buttons[data.correct].className = "w-full text-left p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold";
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-rose-200 bg-rose-50 text-rose-900 text-sm";
+                fb.innerHTML = `<strong>Oj, det blev fel! 🌾</strong><br>${data.explanation}`;
+                playSound('wrong');
+            }
+
+            updateGlobalProgressMap();
+            document.getElementById('m1-next-btn').classList.remove('hidden');
+            if (m1Idx === 9) {
+                document.getElementById('m1-next-btn').innerText = "Klar med del 1! 🎉";
+            } else {
+                document.getElementById('m1-next-btn').innerText = "Nästa fråga ➡️";
+            }
+        }
+
+        function nextM1Question() {
+            if (m1Idx < 9) {
+                m1Idx++;
+                renderM1();
+            } else {
+                switchModule(2); // Gå automatiskt vidare till nästa del
+            }
+        }
+
+
+        // --- MODUL 2 KOD (Sant/Falskt) ---
+        function renderM2() {
+            let data = m2Data[m2Idx];
+            document.getElementById('m2-progress').innerText = `Fråga ${m2Idx + 1} av 10`;
+            document.getElementById('m2-question').innerText = `”${data.q}”`;
+            
+            // Återställ knappar
+            document.getElementById('m2-buttons-container').style.display = 'flex';
+            document.getElementById('m2-feedback').classList.add('hidden');
+            document.getElementById('m2-next-btn').classList.add('hidden');
+        }
+
+        function checkM2(userAnswer) {
+            let data = m2Data[m2Idx];
+            document.getElementById('m2-buttons-container').style.display = 'none';
+            
+            let fb = document.getElementById('m2-feedback');
+            fb.classList.remove('hidden');
+
+            if (userAnswer === data.correct) {
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-900 text-sm";
+                fb.innerHTML = `<strong>Klockrent, det stämmer! 🌟</strong><br>${data.explanation}`;
+                scores[2] = Math.max(scores[2], m2Idx + 1);
+                playSound('correct');
+            } else {
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-rose-200 bg-rose-50 text-rose-900 text-sm";
+                fb.innerHTML = `<strong>Tusan också, det stämmer inte helt! 🤔</strong><br>${data.explanation}`;
+                playSound('wrong');
+            }
+
+            updateGlobalProgressMap();
+            document.getElementById('m2-next-btn').classList.remove('hidden');
+            if (m2Idx === 9) {
+                document.getElementById('m2-next-btn').innerText = "Klar med del 2! 🎉";
+            } else {
+                document.getElementById('m2-next-btn').innerText = "Nästa fråga ➡️";
+            }
+        }
+
+        function nextM2Question() {
+            if (m2Idx < 9) {
+                m2Idx++;
+                renderM2();
+            } else {
+                switchModule(3);
+            }
+        }
+
+
+        // --- MODUL 3 KOD (Resurssorteraren) ---
+        function renderM3() {
+            let data = m3Data[m3Idx];
+            document.getElementById('m3-progress').innerText = `Resurs ${m3Idx + 1} av 10`;
+            document.getElementById('m3-item').innerText = data.name;
+            
+            document.getElementById('m3-feedback').classList.add('hidden');
+            document.getElementById('m3-next-btn').classList.add('hidden');
+        }
+
+        function checkM3(userChoice) {
+            let data = m3Data[m3Idx];
+            let fb = document.getElementById('m3-feedback');
+            fb.classList.remove('hidden');
+
+            if (userChoice === data.type) {
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-900 text-sm";
+                fb.innerHTML = `<strong>Helt rätt sorterat! 🎯</strong><br>${data.exp}`;
+                scores[3] = Math.max(scores[3], m3Idx + 1);
+                playSound('correct');
+            } else {
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-rose-200 bg-rose-50 text-rose-900 text-sm";
+                fb.innerHTML = `<strong>Nja, där hamnade den snett! 🧭</strong><br>${data.exp}`;
+                playSound('wrong');
+            }
+
+            updateGlobalProgressMap();
+            document.getElementById('m3-next-btn').classList.remove('hidden');
+            if (m3Idx === 9) {
+                document.getElementById('m3-next-btn').innerText = "Klar med del 3! 🎉";
+            } else {
+                document.getElementById('m3-next-btn').innerText = "Nästa resurs ➡️";
+            }
+        }
+
+        function nextM3Question() {
+            if (m3Idx < 9) {
+                m3Idx++;
+                renderM3();
+            } else {
+                switchModule(4);
+            }
+        }
+
+
+        // --- MODUL 4 KOD (Koppla begrepp) ---
+        let selectedM4Answers = {}; // {index: wordVal}
+
+        function renderM4() {
+            let container = document.getElementById('m4-matching-container');
+            container.innerHTML = '';
+            
+            // Blanda definitionerna så att de inte ligger i ordning
+            let shuffledDefs = m4Data.map((d, i) => ({ text: d.definition, correctWord: d.word, originalIdx: i }));
+            // Sortera efter slump
+            shuffledDefs.sort(() => Math.random() - 0.5);
+
+            m4Data.forEach((item, idx) => {
+                let row = document.createElement('div');
+                row.className = "flex flex-col md:flex-row items-start md:items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl gap-3";
+                
+                let label = document.createElement('span');
+                label.className = "font-bold text-slate-800 text-base md:w-1/4 fun-font text-cyan-900";
+                label.innerText = item.word;
+
+                let select = document.createElement('select');
+                select.id = `m4-select-${idx}`;
+                select.className = "w-full md:w-3/4 p-2.5 rounded-xl border-2 border-slate-200 bg-white text-sm focus:border-cyan-500 outline-none";
+                
+                let defaultOpt = document.createElement('option');
+                defaultOpt.value = "";
+                defaultOpt.innerText = "-- Välj rätt beskrivning --";
+                select.appendChild(defaultOpt);
+
+                shuffledDefs.forEach(def => {
+                    let opt = document.createElement('option');
+                    opt.value = def.correctWord;
+                    opt.innerText = def.text;
+                    select.appendChild(opt);
+                });
+
+                row.appendChild(label);
+                row.appendChild(select);
+                container.appendChild(row);
+            });
+            
+            // Nollställ feedback
+            document.getElementById('m4-feedback').className = "font-bold text-cyan-900 text-sm";
+            document.getElementById('m4-feedback').innerText = "Inte kontrollerat än. Välj alternativ ovan!";
+        }
+
+        function checkM4() {
+            let allCorrect = true;
+            let correctCount = 0;
+
+            m4Data.forEach((item, idx) => {
+                let select = document.getElementById(`m4-select-${idx}`);
+                if (select.value === item.word) {
+                    select.className = "w-full md:w-3/4 p-2.5 rounded-xl border-2 border-emerald-500 bg-emerald-50 text-emerald-900 text-sm outline-none font-semibold";
+                    correctCount++;
+                } else {
+                    select.className = "w-full md:w-3/4 p-2.5 rounded-xl border-2 border-rose-300 bg-rose-50 text-rose-900 text-sm outline-none";
+                    allCorrect = false;
+                }
+            });
+
+            scores[4] = correctCount;
+            updateGlobalProgressMap();
+
+            let fb = document.getElementById('m4-feedback');
+            if (correctCount === 10) {
+                fb.className = "font-bold text-emerald-700 text-sm";
+                fb.innerHTML = "Fantastiskt! Du parade ihop alla 10 begrepp perfekt! 🏆";
+                playSound('correct');
+            } else {
+                fb.className = "font-bold text-rose-700 text-sm";
+                fb.innerHTML = `Du fick <strong>${correctCount} av 10</strong> rätt. De felaktiga är rödmarkerade, försök byta ut dem!`;
+                playSound('wrong');
+            }
+        }
+
+
+        // --- MODUL 5 KOD (Lucktext) ---
+        function renderM5() {
+            let container = document.getElementById('m5-container');
+            let textHtml = m5Data.text;
+
+            // Ersätt placeholders med <select>-boxar
+            for (let i = 0; i < 10; i++) {
+                let dropdownInfo = m5Data.dropdowns[i];
+                let selectHtml = `<select id="m5-select-${i}" class="inline-block mx-1 p-1 bg-white border-2 border-blue-200 rounded-lg text-sm font-semibold outline-none focus:border-blue-500">`;
+                selectHtml += `<option value="">[Välj ord]</option>`;
+                
+                // Sortera alternativen slumpmässigt
+                let shuffledOptions = [...dropdownInfo.options].sort(() => Math.random() - 0.5);
+                
+                shuffledOptions.forEach(opt => {
+                    selectHtml += `<option value="${opt}">${opt}</option>`;
+                });
+                selectHtml += `</select>`;
+                
+                textHtml = textHtml.replace(`{${i}}`, selectHtml);
+            }
+
+            container.innerHTML = textHtml;
+            document.getElementById('m5-feedback').className = "font-bold text-blue-900 text-sm";
+            document.getElementById('m5-feedback').innerText = "Välj ord i alla luckor och klicka på rätta!";
+        }
+
+        function checkM5() {
+            let correctCount = 0;
+            
+            for (let i = 0; i < 10; i++) {
+                let select = document.getElementById(`m5-select-${i}`);
+                let correctWord = m5Data.dropdowns[i].correct;
+                
+                if (select.value === correctWord) {
+                    select.className = "inline-block mx-1 p-1 bg-emerald-50 border-2 border-emerald-500 rounded-lg text-sm text-emerald-950 font-bold outline-none";
+                    correctCount++;
+                } else {
+                    select.className = "inline-block mx-1 p-1 bg-rose-50 border-2 border-rose-300 rounded-lg text-sm text-rose-950 font-bold outline-none";
+                }
+            }
+
+            scores[5] = correctCount;
+            updateGlobalProgressMap();
+
+            let fb = document.getElementById('m5-feedback');
+            if (correctCount === 10) {
+                fb.className = "font-bold text-emerald-700 text-sm";
+                fb.innerHTML = "Otroligt bra jobbat! Du fyllde i hela texten helt rätt! 💧💧";
+                playSound('correct');
+            } else {
+                fb.className = "font-bold text-rose-700 text-sm";
+                fb.innerHTML = `Nära skjuter ingen hare! Du fick <strong>${correctCount} av 10</strong> rätt. Försök klura ut resten!`;
+                playSound('wrong');
+            }
+        }
+
+
+        // --- MODUL 6 KOD (Miljödetektiven) ---
+        function renderM6() {
+            let data = m6Data[m6Idx];
+            document.getElementById('m6-progress').innerText = `Beteende ${m6Idx + 1} av 10`;
+            document.getElementById('m6-item').innerText = data.item;
+            
+            document.getElementById('m6-feedback').classList.add('hidden');
+            document.getElementById('m6-next-btn').classList.add('hidden');
+        }
+
+        function checkM6(userChoice) {
+            let data = m6Data[m6Idx];
+            let fb = document.getElementById('m6-feedback');
+            fb.classList.remove('hidden');
+
+            if (userChoice === data.type) {
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-900 text-sm";
+                fb.innerHTML = `<strong>Rätt tänkt! 🟢</strong><br>${data.exp}`;
+                scores[6] = Math.max(scores[6], m6Idx + 1);
+                playSound('correct');
+            } else {
+                fb.className = "mt-6 p-4 rounded-2xl border-2 border-rose-200 bg-rose-50 text-rose-900 text-sm";
+                fb.innerHTML = `<strong>Tänk efter ett varv till! 🔴</strong><br>${data.exp}`;
+                playSound('wrong');
+            }
+
+            updateGlobalProgressMap();
+            document.getElementById('m6-next-btn').classList.remove('hidden');
+            if (m6Idx === 9) {
+                document.getElementById('m6-next-btn').innerText = "Kontrollera slutresultat! 🏁";
+            } else {
+                document.getElementById('m6-next-btn').innerText = "Nästa beteende ➡️";
+            }
+        }
+
+        function nextM6Question() {
+            if (m6Idx < 9) {
+                m6Idx++;
+                renderM6();
+            } else {
+                // Denna kommer att aktivera Grattis-skärmen om alla är helt klara med full pott
+                updateGlobalProgressMap();
+            }
+        }
+
+
+        // --- SYSTEMMETODER ---
+        function resetAll() {
+            // Nollställ poäng
+            for (let i = 1; i <= 6; i++) {
+                scores[i] = 0;
+            }
+            
+            m1Idx = 0;
+            m2Idx = 0;
+            m3Idx = 0;
+            m6Idx = 0;
+
+            document.getElementById('congrats-overlay').classList.add('hidden');
+
+            // Byt tillbaka till första fliken
+            switchModule(1);
+            updateGlobalProgressMap();
+        }
+    </script>
+</body>
+</html>
+
