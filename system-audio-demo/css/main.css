@@ -154,3 +154,7 @@ figure {
   margin-top: 10px;
   color: green;
 }
+
+#gdm-video {
+  max-width: 640px;
+}

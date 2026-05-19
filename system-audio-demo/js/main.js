@@ -18,6 +18,7 @@ const gdmAudio = document.getElementById('gdm-audio');
 const gdmPlayAudioButton = document.getElementById('gdm-play-audio');
 const gdmViewVideoCheckbox = document.getElementById('gdm-view-video');
 const gdmVideo = document.getElementById('gdm-video');
+const gdmVideoContainer = document.getElementById('gdm-video-container');
 const gdmRecordedAudio = document.getElementById('gdm-recorded-audio');
 const gdmRecordButton = document.getElementById('gdm-record');
 const gdmRecordedDiv = document.getElementById('gdm-recorded');
@@ -26,6 +27,10 @@ const warningElement = document.getElementById('warning-message');
 const gdmCanvas = document.getElementById('gdm-level-meter');
 
 import { logi, prettyJson } from './utils.js';
+
+gdmViewVideoCheckbox.onclick = () => {
+  gdmVideoContainer.style.display = gdmViewVideoCheckbox.checked ? 'flex' : 'none';
+};
 
 // Set to true if at least one output device is detected.
 let audioContext;
@@ -386,6 +391,8 @@ async function startGdm() {
         logi('[gDM] MediaStreamTrack.ended: ' + audioTrack.label);
         if (!gdmViewVideoCheckbox.checked) {
           stopGdm();
+        } else {
+          printGdmAudioTrack(audioTrack);
         }
       });
     
