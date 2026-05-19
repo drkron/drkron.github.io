@@ -16,6 +16,8 @@ const gdmStopButton = document.getElementById('gdm-stop');
 const gdmMuteCheckbox = document.getElementById('gdm-mute');
 const gdmAudio = document.getElementById('gdm-audio');
 const gdmPlayAudioButton = document.getElementById('gdm-play-audio');
+const gdmViewVideoCheckbox = document.getElementById('gdm-view-video');
+const gdmVideo = document.getElementById('gdm-video');
 const gdmRecordedAudio = document.getElementById('gdm-recorded-audio');
 const gdmRecordButton = document.getElementById('gdm-record');
 const gdmRecordedDiv = document.getElementById('gdm-recorded');
@@ -356,6 +358,10 @@ async function startGdm() {
     gdmButton.disabled = true;
     gdmStream = await navigator.mediaDevices.getDisplayMedia(options);
 
+    if (gdmViewVideoCheckbox.checked) {
+      gdmVideo.srcObject = gdmStream;
+    }
+
     const [videoTrack] = gdmStream.getVideoTracks();
     if (videoTrack) {
       const settings = videoTrack.getSettings();
@@ -378,7 +384,9 @@ async function startGdm() {
       };
       audioTrack.addEventListener('ended', () => {
         logi('[gDM] MediaStreamTrack.ended: ' + audioTrack.label);
-        stopGdm();
+        if (!gdmViewVideoCheckbox.checked) {
+          stopGdm();
+        }
       });
     
       if (audioTrack.readyState != 'ended') {  
@@ -414,6 +422,7 @@ async function startGdm() {
     gdmSystemAudioCheckbox.disabled = true;
     gdmWindowAudioSelect.disabled = true;
     gdmRestrictOwnAudioCheckbox.disabled = true;
+    gdmViewVideoCheckbox.disabled = true;
     gdmMuteCheckbox.disabled = false;
     gdmRecordButton.disabled = false;
   } catch (e) {
@@ -439,12 +448,14 @@ function stopGdm() {
     }
     gdmStream = null;
     gdmAudio.srcObject = null;
+    gdmVideo.srcObject = null;
     gdmButton.disabled = false;
     gdmStopButton.disabled = true;
     gdmLocalAudioPlaybackCheckbox.disabled = false;
     gdmSystemAudioCheckbox.disabled = false;
-    gdmWindowAudioSelect.disable = false;
+    gdmWindowAudioSelect.disabled = false;
     gdmRestrictOwnAudioCheckbox.disabled = false;
+    gdmViewVideoCheckbox.disabled = false;
     gdmMuteCheckbox.disabled = true;
     gdmRecordButton.textContent = 'Start Recording';
     gdmRecordButton.disabled = true;
