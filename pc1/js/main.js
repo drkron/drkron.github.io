@@ -29,6 +29,22 @@ remoteVideo.addEventListener('loadedmetadata', function() {
   console.log(`Remote video videoWidth: ${this.videoWidth}px,  videoHeight: ${this.videoHeight}px`);
 });
 
+remoteVideo.addEventListener('play', () => {
+  console.log('Remote video play event fired');
+});
+
+remoteVideo.addEventListener('playing', () => {
+  console.log('Remote video playing event fired (video is actually playing)');
+});
+
+remoteVideo.addEventListener('pause', () => {
+  console.log('Remote video paused');
+});
+
+remoteVideo.addEventListener('error', (e) => {
+  console.error('Remote video error event:', e);
+});
+
 remoteVideo.addEventListener('resize', () => {
   console.log(`Remote video size changed to ${remoteVideo.videoWidth}x${remoteVideo.videoHeight} - Time since pageload ${performance.now().toFixed(0)}ms`);
   // We'll use the first onsize callback as an indication that video has started
