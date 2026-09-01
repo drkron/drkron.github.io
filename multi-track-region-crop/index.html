@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Track Region Cropping Demo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-icon">🎯</div>
+        <div>
+          <h1>Multi-Track Region Cropping Demo</h1>
+          <p class="subtitle">Dynamic Tab Capture &amp; Multi-Track Cropping with <code>CropTarget</code> &amp; <code>cropTo()</code></p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div id="api-status-badge" class="badge badge-warning">Checking API support...</div>
+      </div>
+    </header>
+
+    <!-- API Compatibility / Notice Banner -->
+    <section id="api-alert" class="alert-box alert-info hidden">
+      <div class="alert-icon">ℹ️</div>
+      <div class="alert-content">
+        <strong id="api-alert-title">Region Capture Status</strong>
+        <p id="api-alert-message">Detecting browser capabilities...</p>
+      </div>
+    </section>
+
+    <!-- Main Workspace Layout: Split between Target Source & Capture Previews -->
+    <main class="main-grid">
+      <!-- LEFT COLUMN: Live Animated Source Regions -->
+      <section class="panel source-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="dot live-dot"></span>
+            <h2>Capture Target Area (Live Source)</h2>
+          </div>
+          <div class="panel-actions">
+            <button id="btn-toggle-anim" class="btn btn-sm btn-secondary" title="Pause or resume background animations">
+              ⏸ Pause Animation
+            </button>
+            <button id="btn-resize-toggle" class="btn btn-sm btn-secondary" title="Toggle size to test dynamic layout cropping">
+              📐 Toggle Resize
+            </button>
+          </div>
+        </div>
+
+        <p class="panel-desc">
+          The container below contains nested target elements with continuous 10 FPS color updates and a 1s counter. 
+          Use <code>cropTo()</code> to isolate any region seamlessly.
+        </p>
+
+        <!-- Greater Area: Outer Frame with 10 FPS animated background -->
+        <div id="target-greater-region" class="target-box greater-region" data-region-name="Greater Region">
+          <div class="target-header-tag">
+            <span class="tag-badge">Region 0: Greater Area</span>
+            <span class="fps-indicator">10 FPS Hue Cycle</span>
+            <span id="greater-fps-counter" class="fps-stat">Frame: 0</span>
+          </div>
+
+          <div class="inner-regions-wrapper">
+            <!-- Inner Region 1: 10 FPS Background Animation -->
+            <div id="target-inner-region-1" class="target-box inner-region inner-1" data-region-name="Inner Region 1">
+              <div class="target-header-tag">
+                <span class="tag-badge tag-orange">Region 1: Inner Color Anim</span>
+                <span class="fps-indicator">10 FPS</span>
+              </div>
+              <div class="inner-content">
+                <div class="visual-pulser">
+                  <div class="pulse-ring"></div>
+                  <div class="pulse-core"></div>
+                </div>
+                <div class="color-details">
+                  <div class="color-hex" id="inner1-color-label">#000000</div>
+                  <div class="color-sub">Dynamic Background</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inner Region 2: 1s Counter -->
+            <div id="target-inner-region-2" class="target-box inner-region inner-2" data-region-name="Inner Region 2">
+              <div class="target-header-tag">
+                <span class="tag-badge tag-green">Region 2: 1s Counter</span>
+                <span class="fps-indicator">1 FPS</span>
+              </div>
+              <div class="counter-display">
+                <div class="counter-value" id="counter-value">0</div>
+                <div class="counter-time" id="counter-time">00:00:00</div>
+                <div class="counter-progress-bar">
+                  <div id="counter-progress-fill" class="progress-fill"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom bar in greater region -->
+          <div class="greater-footer">
+            <span class="mono-text" id="greater-color-label">HSL(0, 70%, 25%)</span>
+            <span class="status-pill">Target Elements Active</span>
+          </div>
+        </div>
+
+        <!-- Explanatory note -->
+        <div class="card-hint">
+          <strong>Tip:</strong> Try resizing the window or toggling the container size. Notice how the cropped video track tracks the element geometry without distortion or letterboxing!
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: Capture & Cloned Tracks Manager -->
+      <section class="panel capture-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="dot" id="capture-status-dot"></span>
+            <h2>Captured Tracks &amp; Clones</h2>
+          </div>
+          <div class="panel-actions">
+            <button id="btn-start-capture" class="btn btn-primary">
+              <span class="icon">🎥</span> Start Capture
+            </button>
+            <button id="btn-add-clone" class="btn btn-secondary" disabled>
+              <span class="icon">➕</span> Clone Track
+            </button>
+            <button id="btn-stop-all" class="btn btn-danger" disabled>
+              <span class="icon">⏹</span> Stop Capture
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty state when no capture is active -->
+        <div id="capture-empty-state" class="empty-state">
+          <div class="empty-icon">📺</div>
+          <h3>No Active Capture</h3>
+          <p>Click <strong>"Start Capture"</strong> above and choose <em>Current Tab</em> (or this window) to begin. You can then clone the track and independently crop each clone to different sub-regions in real time.</p>
+        </div>
+
+        <!-- Container for active video track cards -->
+        <div id="tracks-container" class="tracks-grid"></div>
+      </section>
+    </main>
+
+    <!-- Activity Log Footer -->
+    <section class="panel log-panel">
+      <div class="panel-header compact">
+        <div class="panel-title">
+          <span class="mono-title">Activity Log &amp; API Events</span>
+        </div>
+        <button id="btn-clear-log" class="btn btn-xs btn-outline">Clear Log</button>
+      </div>
+      <div id="log-console" class="log-console"></div>
+    </section>
+  </div>
+
+  <!-- Track Card Template (Instantiated via JS) -->
+  <template id="track-card-template">
+    <div class="track-card">
+      <div class="track-card-header">
+        <div class="track-info">
+          <span class="track-type-badge">Primary Track</span>
+          <span class="track-id-label">ID: #0</span>
+        </div>
+        <div class="track-meta">
+          <span class="res-badge">0x0</span>
+          <button class="btn btn-xs btn-icon btn-close-track" title="Stop & Remove this track">✕</button>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <video autoplay playsinline muted></video>
+        <div class="video-overlay-tag">Uncropped</div>
+      </div>
+
+      <div class="track-controls">
+        <label class="control-label">Target Crop Region:</label>
+        <div class="crop-btn-group">
+          <button class="btn btn-crop active" data-crop="uncropped">
+            <span class="crop-icon">🔲</span> Uncropped (Full)
+          </button>
+          <button class="btn btn-crop" data-crop="greater">
+            <span class="crop-icon">🟧</span> Greater Area
+          </button>
+          <button class="btn btn-crop" data-crop="inner1">
+            <span class="crop-icon">🎨</span> Inner 1 (Color)
+          </button>
+          <button class="btn btn-crop" data-crop="inner2">
+            <span class="crop-icon">⏱️</span> Inner 2 (Counter)
+          </button>
+        </div>
+      </div>
+
+      <div class="track-card-footer">
+        <div class="track-status-text">Status: <span class="status-val">Ready</span></div>
+        <button class="btn btn-xs btn-outline btn-clone-this" title="Clone from this track">Clone this</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
