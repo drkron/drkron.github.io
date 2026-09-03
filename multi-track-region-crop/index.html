@@ -47,8 +47,8 @@
             <button id="btn-toggle-anim" class="btn btn-sm btn-secondary" title="Pause or resume background animations">
               ⏸ Pause Animation
             </button>
-            <button id="btn-resize-toggle" class="btn btn-sm btn-secondary" title="Toggle size to test dynamic layout cropping">
-              📐 Toggle Resize
+            <button id="btn-resize-toggle" class="btn btn-sm btn-secondary" title="Toggle size: Inner 1 (odd origin) & Inner 2 (even origin, odd size)">
+              📐 Toggle Size
             </button>
           </div>
         </div>
@@ -71,6 +71,7 @@
             <div id="target-inner-region-1" class="target-box inner-region inner-1" data-region-name="Inner Region 1">
               <div class="target-header-tag">
                 <span class="tag-badge tag-orange">Region 1: Inner Color Anim</span>
+                <span id="inner1-geo-badge" class="geo-badge">Origin: -- | Size: --</span>
                 <span class="fps-indicator">10 FPS</span>
               </div>
               <div class="inner-content">
@@ -89,6 +90,7 @@
             <div id="target-inner-region-2" class="target-box inner-region inner-2" data-region-name="Inner Region 2">
               <div class="target-header-tag">
                 <span class="tag-badge tag-green">Region 2: 1s Counter</span>
+                <span id="inner2-geo-badge" class="geo-badge">Origin: -- | Size: --</span>
                 <span class="fps-indicator">1 FPS</span>
               </div>
               <div class="counter-display">

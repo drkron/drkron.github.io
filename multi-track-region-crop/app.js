@@ -51,6 +51,8 @@ const DOM = {
   greaterFpsCounter: document.getElementById('greater-fps-counter'),
   greaterColorLabel: document.getElementById('greater-color-label'),
   inner1ColorLabel: document.getElementById('inner1-color-label'),
+  inner1GeoBadge: document.getElementById('inner1-geo-badge'),
+  inner2GeoBadge: document.getElementById('inner2-geo-badge'),
   counterValue: document.getElementById('counter-value'),
   counterTime: document.getElementById('counter-time'),
   counterProgressFill: document.getElementById('counter-progress-fill'),
@@ -468,14 +470,150 @@ async function applyCropToTrack(trackId, track, cropKey, cardElement, cropButton
 }
 
 // ============================================================================
-// Layout Dynamic Resizing Toggle
+// Layout Dynamic Resizing Toggle (Odd/Even Origins & Sizes)
 // ============================================================================
-let isCompact = false;
+let isSizeToggled = false;
+
+function updateGeometryMetrics() {
+  const dpr = window.devicePixelRatio || 1;
+  const r1 = DOM.targetInner1.getBoundingClientRect();
+  const r2 = DOM.targetInner2.getBoundingClientRect();
+
+  const m1 = {
+    x: Math.round(r1.left * dpr),
+    y: Math.round(r1.top * dpr),
+    w: Math.round(r1.width * dpr),
+    h: Math.round(r1.height * dpr)
+  };
+
+  const m2 = {
+    x: Math.round(r2.left * dpr),
+    y: Math.round(r2.top * dpr),
+    w: Math.round(r2.width * dpr),
+    h: Math.round(r2.height * dpr)
+  };
+
+  if (DOM.inner1GeoBadge) {
+    const xOdd = m1.x % 2 !== 0;
+    const yOdd = m1.y % 2 !== 0;
+    const originTag = (xOdd || yOdd) ? 'ODD' : 'EVEN';
+    const sizeTag = (m1.w % 2 === 0 && m1.h % 2 === 0) ? 'EVEN' : 'ODD';
+    DOM.inner1GeoBadge.innerHTML = `Origin: <span class="badge-metric">${m1.x},${m1.y}</span> [<span class="${originTag === 'ODD' ? 'badge-tag-odd' : 'badge-tag-even'}">${originTag}</span>] | Size: <span class="badge-metric">${m1.w}×${m1.h}</span> [<span class="${sizeTag === 'EVEN' ? 'badge-tag-even' : 'badge-tag-odd'}">${sizeTag}</span>]`;
+  }
+
+  if (DOM.inner2GeoBadge) {
+    const xEven = m2.x % 2 === 0;
+    const yEven = m2.y % 2 === 0;
+    const originTag = (xEven && yEven) ? 'EVEN' : 'ODD';
+    const wOdd = m2.w % 2 !== 0;
+    const hOdd = m2.h % 2 !== 0;
+    const sizeTag = (wOdd || hOdd) ? 'ODD' : 'EVEN';
+    DOM.inner2GeoBadge.innerHTML = `Origin: <span class="badge-metric">${m2.x},${m2.y}</span> [<span class="${originTag === 'EVEN' ? 'badge-tag-even' : 'badge-tag-odd'}">${originTag}</span>] | Size: <span class="badge-metric">${m2.w}×${m2.h}</span> [<span class="${sizeTag === 'ODD' ? 'badge-tag-odd' : 'badge-tag-even'}">${sizeTag}</span>]`;
+  }
+
+  return { m1, m2 };
+}
+
+function applyTargetGeometry() {
+  const dpr = window.devicePixelRatio || 1;
+
+  // Reset any previous inline adjustments to measure natural layout
+  DOM.targetInner1.style.transform = '';
+  DOM.targetInner1.style.width = '';
+  DOM.targetInner1.style.height = '';
+  DOM.targetInner2.style.transform = '';
+  DOM.targetInner2.style.width = '';
+  DOM.targetInner2.style.height = '';
+
+  DOM.targetGreater.classList.toggle('toggled-size', isSizeToggled);
+
+  // Measure base layout coordinates
+  let r1 = DOM.targetInner1.getBoundingClientRect();
+  let r2 = DOM.targetInner2.getBoundingClientRect();
+
+  if (!isSizeToggled) {
+    // Normal state: Ensure both Inner 1 and Inner 2 have EVEN origin and EVEN size
+    let physX1 = Math.round(r1.left * dpr);
+    let physY1 = Math.round(r1.top * dpr);
+    let shiftX1 = (physX1 % 2 !== 0) ? 1 : 0;
+    let shiftY1 = (physY1 % 2 !== 0) ? 1 : 0;
+    if (shiftX1 || shiftY1) {
+      DOM.targetInner1.style.transform = `translate(${shiftX1 / dpr}px, ${shiftY1 / dpr}px)`;
+    }
+    let physW1 = Math.round(r1.width * dpr);
+    let physH1 = Math.round(r1.height * dpr);
+    if (physW1 % 2 !== 0) {
+      DOM.targetInner1.style.width = `${(physW1 + 1) / dpr}px`;
+    }
+    if (physH1 % 2 !== 0) {
+      DOM.targetInner1.style.height = `${(physH1 + 1) / dpr}px`;
+    }
+
+    let physX2 = Math.round(r2.left * dpr);
+    let physY2 = Math.round(r2.top * dpr);
+    let shiftX2 = (physX2 % 2 !== 0) ? 1 : 0;
+    let shiftY2 = (physY2 % 2 !== 0) ? 1 : 0;
+    if (shiftX2 || shiftY2) {
+      DOM.targetInner2.style.transform = `translate(${shiftX2 / dpr}px, ${shiftY2 / dpr}px)`;
+    }
+    let physW2 = Math.round(r2.width * dpr);
+    let physH2 = Math.round(r2.height * dpr);
+    if (physW2 % 2 !== 0) {
+      DOM.targetInner2.style.width = `${(physW2 + 1) / dpr}px`;
+    }
+    if (physH2 % 2 !== 0) {
+      DOM.targetInner2.style.height = `${(physH2 + 1) / dpr}px`;
+    }
+  } else {
+    // Toggled state:
+    // 1. Inner 1: Changed to be at an ODD origin (even size preserved)
+    let physX1 = Math.round(r1.left * dpr);
+    let physY1 = Math.round(r1.top * dpr);
+    let shiftX1 = (physX1 % 2 === 0) ? 1 : 0; // if even, shift by 1 physical pixel to make odd
+    let shiftY1 = (physY1 % 2 === 0) ? 1 : 0; // if even, shift by 1 physical pixel to make odd
+    DOM.targetInner1.style.transform = `translate(${shiftX1 / dpr}px, ${shiftY1 / dpr}px)`;
+
+    let physW1 = Math.round(r1.width * dpr);
+    let physH1 = Math.round(r1.height * dpr);
+    if (physW1 % 2 !== 0) {
+      DOM.targetInner1.style.width = `${(physW1 - 1) / dpr}px`;
+    }
+    if (physH1 % 2 !== 0) {
+      DOM.targetInner1.style.height = `${(physH1 - 1) / dpr}px`;
+    }
+
+    // 2. Inner 2: Kept at an EVEN origin, but changed to have an ODD size
+    let physX2 = Math.round(r2.left * dpr);
+    let physY2 = Math.round(r2.top * dpr);
+    let shiftX2 = (physX2 % 2 !== 0) ? 1 : 0; // if odd, shift by 1 physical pixel to make even
+    let shiftY2 = (physY2 % 2 !== 0) ? 1 : 0; // if odd, shift by 1 physical pixel to make even
+    if (shiftX2 || shiftY2) {
+      DOM.targetInner2.style.transform = `translate(${shiftX2 / dpr}px, ${shiftY2 / dpr}px)`;
+    }
+
+    let physW2 = Math.round(r2.width * dpr);
+    let physH2 = Math.round(r2.height * dpr);
+    let targetW2 = (physW2 % 2 === 0) ? (physW2 + 1) : physW2; // ensure odd physical width
+    let targetH2 = (physH2 % 2 === 0) ? (physH2 + 1) : physH2; // ensure odd physical height
+    DOM.targetInner2.style.width = `${targetW2 / dpr}px`;
+    DOM.targetInner2.style.height = `${targetH2 / dpr}px`;
+  }
+
+  // Update visual badges
+  const { m1, m2 } = updateGeometryMetrics();
+  return { m1, m2 };
+}
+
 function toggleTargetResize() {
-  isCompact = !isCompact;
-  DOM.targetGreater.classList.toggle('compact-size', isCompact);
-  DOM.btnResizeToggle.textContent = isCompact ? '📐 Expand Size' : '📐 Toggle Resize';
-  log(`Toggled Target Area size: ${isCompact ? 'Compact (300px)' : 'Standard (420px)'}. Observe how crop bounds adapt seamlessly!`, 'info');
+  isSizeToggled = !isSizeToggled;
+  DOM.btnResizeToggle.textContent = isSizeToggled ? '📐 Reset Size' : '📐 Toggle Size';
+  const { m1, m2 } = applyTargetGeometry();
+
+  if (isSizeToggled) {
+    log(`📐 Toggled Size: Inner 1 moved to ODD origin (${m1.x}, ${m1.y}), Inner 2 at EVEN origin (${m2.x}, ${m2.y}) with ODD size (${m2.w}×${m2.h})`, 'info');
+  } else {
+    log(`📐 Reset Size: Inner 1 at EVEN origin (${m1.x}, ${m1.y}), Inner 2 at EVEN size (${m2.w}×${m2.h})`, 'info');
+  }
 }
 
 // ============================================================================
@@ -496,8 +634,16 @@ function init() {
     DOM.logConsole.innerHTML = '';
   });
 
+  // Recompute on window resize to preserve odd/even alignment
+  window.addEventListener('resize', () => {
+    applyTargetGeometry();
+  });
+
   // Start continuous 10 FPS color animation & 1s counter
   startAnimations();
+
+  // Initialize geometry alignment and metrics
+  applyTargetGeometry();
 
   // Check API support and produce targets
   checkAPISupport();
