@@ -823,9 +823,18 @@ code {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
   padding-top: 6px;
   border-top: 1px solid var(--border-color);
   font-size: 0.75rem;
+}
+
+.track-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .track-status-text {

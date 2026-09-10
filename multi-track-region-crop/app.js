@@ -297,10 +297,66 @@ function cloneTrack(sourceTrack = state.primaryTrack) {
       log(`Cloned track #${clonedTrack.id.substring(0, 8)} ended.`, 'info');
     });
 
-    addTrackCard(clonedTrack, clonedStream, 'clone');
-    log('Cloned track created successfully with independent crop capability.', 'success');
+    const sourceItem = state.activeTracks.find(t => t.track === sourceTrack);
+    const initialCrop = sourceItem ? sourceItem.currentCrop : 'uncropped';
+
+    addTrackCard(clonedTrack, clonedStream, 'clone', initialCrop);
+    log(`Cloned track created successfully (inheriting ${initialCrop} crop).`, 'success');
   } catch (err) {
     log(`Track clone failed: ${err.message}`, 'error');
+  }
+}
+
+async function cloneTrackAndCropToNull(sourceTrack = state.primaryTrack) {
+  if (!sourceTrack || sourceTrack.readyState === 'ended') {
+    log('Cannot clone track: source track is inactive or ended.', 'error');
+    return;
+  }
+
+  try {
+    const track1 = sourceTrack;
+    log(`Executing: track2 = track1.clone(); track2.cropTo(null)...`, 'info');
+    const track2 = track1.clone();
+
+    track2.addEventListener('ended', () => {
+      log(`Cloned track #${track2.id.substring(0, 8)} ended.`, 'info');
+    });
+
+    // Operation 2: track2.cropTo(null)
+    let cropPromise = null;
+    if (typeof track2.cropTo === 'function') {
+      cropPromise = track2.cropTo(null);
+    } else {
+      log('track.cropTo() is not supported on this MediaStreamTrack.', 'warn');
+    }
+
+    const clonedStream = new MediaStream([track2]);
+    const cardElement = addTrackCard(track2, clonedStream, 'clone', 'uncropped');
+
+    if (cropPromise) {
+      const statusVal = cardElement ? cardElement.querySelector('.status-val') : null;
+      if (statusVal) {
+        statusVal.textContent = 'Uncropping (cropTo(null))...';
+        statusVal.style.color = '#d29922';
+      }
+
+      try {
+        await cropPromise;
+        if (statusVal) {
+          statusVal.textContent = 'Active: Uncropped (Full View)';
+          statusVal.style.color = '#3fb950';
+        }
+        log(`track2.cropTo(null) resolved successfully. Track #${track2.id.substring(0, 8)} is uncropped.`, 'success');
+      } catch (cropErr) {
+        if (statusVal) {
+          statusVal.textContent = `cropTo(null) error: ${cropErr.message}`;
+          statusVal.style.color = '#f85149';
+        }
+        log(`track2.cropTo(null) failed: ${cropErr.message}`, 'error');
+      }
+    }
+  } catch (err) {
+    log(`Track clone & cropTo(null) failed: ${err.message}`, 'error');
   }
 }
 
@@ -359,7 +415,7 @@ function removeTrack(trackId) {
 // ============================================================================
 // Track Card UI & Dynamic cropTo() Handler
 // ============================================================================
-function addTrackCard(track, stream, type = 'primary') {
+function addTrackCard(track, stream, type = 'primary', initialCrop = 'uncropped') {
   const trackId = state.nextTrackId++;
   const template = DOM.trackCardTemplate.content.cloneNode(true);
   const cardElement = template.querySelector('.track-card');
@@ -392,6 +448,13 @@ function addTrackCard(track, stream, type = 'primary') {
   videoEl.addEventListener('loadedmetadata', updateResolution);
   videoEl.addEventListener('resize', updateResolution);
 
+  const cropLabels = {
+    uncropped: 'Uncropped (Full View)',
+    greater: 'Greater Area',
+    inner1: 'Inner Region 1 (Color Anim)',
+    inner2: 'Inner Region 2 (1s Counter)'
+  };
+
   // Crop Selector Buttons
   const cropButtons = cardElement.querySelectorAll('.btn-crop');
   cropButtons.forEach(btn => {
@@ -408,6 +471,20 @@ function addTrackCard(track, stream, type = 'primary') {
   const btnCloneThis = cardElement.querySelector('.btn-clone-this');
   btnCloneThis.addEventListener('click', () => cloneTrack(track));
 
+  const btnCloneCropNull = cardElement.querySelector('.btn-clone-crop-null');
+  if (btnCloneCropNull) {
+    btnCloneCropNull.addEventListener('click', () => cloneTrackAndCropToNull(track));
+  }
+
+  // Set initial crop UI state if specified (e.g. inheriting from source clone)
+  if (initialCrop && initialCrop !== 'uncropped') {
+    cropButtons.forEach(b => {
+      b.classList.toggle('active', b.dataset.crop === initialCrop);
+    });
+    overlayTag.textContent = cropLabels[initialCrop] || initialCrop;
+    statusVal.textContent = 'Active: ' + (cropLabels[initialCrop] || initialCrop);
+  }
+
   // Store active track reference
   const trackItem = {
     id: trackId,
@@ -415,12 +492,13 @@ function addTrackCard(track, stream, type = 'primary') {
     track,
     stream,
     element: cardElement,
-    currentCrop: 'uncropped'
+    currentCrop: initialCrop || 'uncropped'
   };
   state.activeTracks.push(trackItem);
 
   DOM.tracksContainer.appendChild(cardElement);
   log(`Initialized Preview Card for Track #${trackId} (${type}).`, 'info');
+  return cardElement;
 }
 
 async function applyCropToTrack(trackId, track, cropKey, cardElement, cropButtons, overlayTag, statusVal) {
@@ -460,6 +538,11 @@ async function applyCropToTrack(trackId, track, cropKey, cardElement, cropButton
     overlayTag.textContent = cropLabels[cropKey];
     statusVal.textContent = 'Active: ' + cropLabels[cropKey];
     statusVal.style.color = '#3fb950';
+
+    const trackItem = state.activeTracks.find(t => t.id === trackId);
+    if (trackItem) {
+      trackItem.currentCrop = cropKey;
+    }
 
     log(`Track #${trackId}: Successfully cropped to [${cropLabels[cropKey]}].`, 'success');
   } catch (err) {

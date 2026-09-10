@@ -21,6 +21,9 @@ An interactive demonstration of the W3C **Region Capture** API (`CropTarget` and
      - **🎨 Inner Region 1 (Color)**: `track.cropTo(targetInner1)`
      - **⏱️ Inner Region 2 (Counter)**: `track.cropTo(targetInner2)`
    - Dynamically updates the crop boundaries while capture is active.
+   - **Track Actions**:
+     - **Clone this**: Clones the track with `track.clone()`, retaining the current crop target.
+     - **Clone & cropTo(null)**: Clones and uncrops the track with `track2 = track1.clone(); track2.cropTo(null);`.
 
 4. **Dynamic Layout & Resize Resilience**:
    - Includes a "Toggle Resize" control to demonstrate that `cropTo()` automatically tracks element layout changes (resizing, repositioning, zooming) without distortion or mis-cropping.
